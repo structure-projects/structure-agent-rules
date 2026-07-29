@@ -1,0 +1,50 @@
+---
+description: structure-projects 生态评审约束。审查 PR / diff / 设计文档时生效。
+globs:
+  - "**/*.md"
+alwaysApply: false
+---
+
+# structure-projects 评审规则
+
+完整规范见 `prompts/reviewer.md`。以下为关键内联规则：
+
+## 评审顺序
+1. 包名与坐标 → 2. 模块依赖方向 → 3. 工具类优先级（自定义限 infra 层） → 4. Bean 注入（构造器 > @Resource > @Autowired 谨慎） → 5. 持久化路径（RepositoryFacade + 显式 toEntity/toPo） → 6. POJO 规范（@Builder + 无参构造 + 参数 ≤ 3） → 7. 统一性（CommonException + ResultUtilSimpleImpl + ResResultVO） → 8. API 出入参（分页签名 `page(query, reqPage)` + CRUD 命名统一） → 9. 用户上下文（非控制层 MUST） → 10. 数据权限（缓存/事件用框架包装） → 11. 多租户 → 12. 安全 → 13. 版本兼容 → 14. 测试 → 15. 文档
+
+## 硬性驳回项
+- 包名混淆 `cn.structure` ↔ `cn.structured`
+- DDD `application`/`domain` 直接注入 `Mapper`/`PO`
+- `MybatisPlusDelegate` 未显式重写 `toEntity`/`toPo`
+- 业务层抛非 `CommonException` 异常
+- 控制层用 `throw` 抛业务异常（应用 `ResultUtilSimpleImpl.fail`）
+- 业务异常缺 `{X}ExceptionEnum` 枚举
+- POJO 缺无参构造
+- 非控制层用 `SecurityUtils`/`SecurityContextHolder`（应用用户上下文）
+- 缓存/事件未用框架的数据权限包装工具（跨服务消息未走 `DataScopeStreamBridge`）
+- **事件**：未实现 `Event` 接口；跨服务未声明 `MESSAGE_EVENT`；绕过 `EventManager` 直连 publisher/MQ
+- **Binding 消费**：`Consumer` Bean 名 ≠ `@StreamEventListener.bindingName`；`Consumer` 内直接写业务
+- **Router 消费**：`@StreamRouteHandler` 签名非 `(T payload, StreamEvent<T> event)` 双参
+- 自定义工具类放在非 infra 层
+- 业务 SQL 手写 `WHERE tenant_id = ?`
+- 从请求参数/Header 读租户 ID
+- Controller 返回非 `ResResultVO<T>`
+- 绕过 Starter 自行装配且无说明
+- 集成测试 Mock 数据库/Redis/MQ
+- 无 issue 关联的 `@Disabled` 测试
+
+## 建议性反馈
+- 使用 `@Autowired` 字段注入（应优先构造器或 `@Resource`）
+- 函数参数 > 3 未用包装类
+- 命名不统一（`list`/`page`/`queryPage` 混用）
+- Hutool 已实现却手写工具
+- 绕过 Starter 重新实现
+
+## 已知历史遗留（识别但不一定驳回）
+- `cn.structured.{X}.repository.repository.*`（双 "repository"）— 修正需确认
+- 旧 Controller javadoc 含 `@since JDK1.8` 但项目已 JDK 17+ —— NIT
+
+## 反馈格式
+每条反馈含：位置（`file:line`）、级别（MUST-FIX / SHOULD-FIX / NIT / QUESTION）、依据（引用规则条目）、建议（可落地）。
+
+详细规则请读 `prompts/reviewer.md`。
