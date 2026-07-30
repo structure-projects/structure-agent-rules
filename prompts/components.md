@@ -142,43 +142,50 @@ structure-security/
 
 ### ✅ 用户上下文（规则 13 —— 已读源码验证）
 
-**核心接口**：`cn.structured.starter.context.manager.IContextManager`
+**业务侧主入口**：`cn.structured.security.context.UserContext`（**静态 ThreadLocal 工具类**，位于 `structure-security-core` 模块，**无需注入**）
 
-| 方法 | 用途 |
-|---|---|
-| `login(UserContextEntity user)` | 登录（写入上下文） |
-| `updateUser(UserContextEntity user)` | 更新当前用户信息 |
-| `logout()` | 登出（清除上下文） |
-| `getUser()` | **获取当前用户（业务侧主要使用）** |
-| `getUserByUserId(Serializable userId)` | 按 ID 获取任意用户 |
+#### 核心方法
 
-**用户实体**：`cn.structured.security.entity.UserContextEntity`
+| 方法 | 返回 | 用途 |
+|---|---|---|
+| `UserContext.get()` | `UserContextEntity`（可空） | 获取完整用户实体 |
+| `UserContext.getUserId()` | `String` | 获取用户 ID（String 形式） |
+| `UserContext.getLongUserId()` | `Long` | 获取用户 ID（**推荐**，免手写 `Long.parseLong`） |
+| `UserContext.getDeptId()` / `getLongDeptId()` | `String` / `Long` | 获取部门 ID |
+| `UserContext.getDeptIds()` / `getLoneDeptIds()` | `Set<String>` / `Set<Long>` | 获取部门 ID 集合 |
+| `UserContext.getRoles()` / `getLongRoles()` | `Set<String>` / `Set<Long>` | 获取角色集合 |
+| `UserContext.getPermissions()` / `getLongPermissions()` | `Set<String>` / `Set<Long>` | 获取权限集合 |
+| `UserContext.set(info)` | — | 写入上下文（框架/认证侧用） |
+| `UserContext.remove()` | — | 清理上下文（**MUST 在请求/任务结束调用**，防 ThreadLocal 泄漏） |
 
-**存储 SPI**：`cn.structured.starter.context.store.IUserStore`
-
-| 实现 | 场景 |
-|---|---|
-| `DefaultUserStore` | 内存存储（默认） |
-| `RedisUserStore` | Redis 存储（分布式场景，预留扩展） |
-| `RemoteUserStore` | 远程服务存储（预留扩展） |
-
-**典型用法**：
+#### 典型用法
 
 ```java
-@Service
-@RequiredArgsConstructor
-public class OrderServiceImpl implements IOrderService {
+// ✅ 推荐：直接用静态便捷方法
+Long userId = UserContext.getLongUserId();
+if (userId == null) {
+    throw new OrderException(OrderExceptionEnum.NOT_LOGGED_IN);
+}
 
-    private final IContextManager contextManager;  // 非控制层 MUST 用此获取当前用户
-
-    @Override
-    public Long create(OrderDTO dto) {
-        UserContextEntity currentUser = contextManager.getUser();
-        Long userId = currentUser.getId();
-        // ...
-    }
+// ❌ 避免：手写判空 + parseLong（框架已提供 getLongUserId）
+UserContextEntity userContextEntity = UserContext.get();
+if (userContextEntity != null) {
+    String userId = userContextEntity.getUserId();
+    return Long.parseLong(userId);
 }
 ```
+
+#### ⚠️ 已知拼写 bug
+
+`UserContext.getLoneDeptIds()` 应为 `getLongDeptIds()`（"Lone" vs "Long"）。**新代码使用该方法时需注意拼写**；修复需改框架源码。
+
+#### 底层 SPI（一般业务不需直接用）
+
+- **接口**：`cn.structured.starter.context.manager.IContextManager` —— `login(user)` / `updateUser(user)` / `logout()` / `getUser()` / `getUserByUserId(userId)`
+- **存储**：`cn.structured.starter.context.store.IUserStore`（`DefaultUserStore` 内存 / `RedisUserStore` 预留 / `RemoteUserStore` 预留）
+- **实体**：`cn.structured.security.entity.UserContextEntity`
+
+**关系**：`IContextManager` 是认证/框架侧使用的 SPI；**业务侧读取当前用户 MUST 使用 `UserContext` 静态方法**，更简洁且无需注入。
 
 ### ✅ 安全工具类（控制层可用）
 
@@ -188,9 +195,10 @@ public class OrderServiceImpl implements IOrderService {
 
 ### 业务侧约束（规则 13）
 
-- **MUST** 非控制层（Service / Domain / Infra / Assembler / 异步任务）通过注入 `IContextManager` 调用 `getUser()` 获取当前用户。
+- **MUST** 非控制层（Service / Domain / Infra / Assembler / 异步任务）通过 **`cn.structured.security.context.UserContext` 静态方法** 获取当前用户（`UserContext.getLongUserId()` / `UserContext.get()` 等）。
 - **禁止** 非控制层使用 `SecurityUtils` / `SecurityContextHolder` —— 非 HTTP 入口（消息消费、定时任务、内部 RPC）无法获取。
-- **控制层**：`SecurityUtils` 或 `IContextManager` 均可。
+- **SHOULD** 优先使用 `getLongUserId()` / `getLongDeptId()` / `getLongRoles()` 等 **Long 型便捷方法**，避免手写 `Long.parseLong(...)`。
+- **控制层**：`SecurityUtils` 或 `UserContext` 均可。
 
 ### ✅ 权限模型（已读源码验证）
 

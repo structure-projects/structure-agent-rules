@@ -43,6 +43,8 @@ alwaysApply: false
 ## 已知历史遗留（识别但不一定驳回）
 - `cn.structured.{X}.repository.repository.*`（双 "repository"）— 修正需确认
 - 旧 Controller javadoc 含 `@since JDK1.8` 但项目已 JDK 17+ —— NIT
+- `UserContext.getLoneDeptIds()` 拼写错误（框架源码问题，业务使用合理，**不因此驳回业务 PR**）
+- 业务用 `UserContext.get()` + `Long.parseLong(...)` 而非 `getLongUserId()` —— SHOULD-FIX，不驳回
 
 ## 反馈格式
 每条反馈含：位置（`file:line`）、级别（MUST-FIX / SHOULD-FIX / NIT / QUESTION）、依据（引用规则条目）、建议（可落地）。

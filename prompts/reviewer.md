@@ -37,7 +37,7 @@
 - 控制层用 `throw` 抛出业务异常（应使用 `ResultUtilSimpleImpl.fail(...)`）。
 - 业务异常缺少 `{X}ExceptionEnum` 枚举定义，用字符串字面量作为错误码。
 - POJO（Entity / PO / DTO / VO / Query）**缺少无参构造方法**。
-- 非控制层通过 `SecurityUtils` / `SecurityContextHolder` 获取当前用户（应使用用户上下文）。
+- 非控制层通过 `SecurityUtils` / `SecurityContextHolder` 获取当前用户（应使用 `cn.structured.security.context.UserContext` 静态方法）。
 - 缓存 / 事件未使用框架的数据权限包装工具（如跨服务消息事件未走 `DataScopeStreamBridge`）。
 - **事件发布**：
   - 业务事件未实现 `cn.structure.infra.event.Event` 接口。
@@ -71,6 +71,8 @@
 
 - `repository-mybatis` 模块下的包路径是 `cn.structured.{X}.repository.repository.*`（**双 "repository"**）。是否要求修正需与作者确认（可能为了兼容已有代码而沿用）。
 - 部分 Controller javadoc 含 `@since JDK1.8`，实际项目已是 JDK 17+ —— NIT 级别提醒即可。
+- `UserContext.getLoneDeptIds()` 拼写错误（"Lone" 应为 "Long"）—— 框架源码问题，业务代码使用该方法是合理的，**不要**因为拼写驳回业务 PR；新代码可建议改用 `getDeptIds()` 后自行转 Long 规避。
+- 业务代码用 `UserContext.get()` + `Long.parseLong(e.getUserId())` 而非 `UserContext.getLongUserId()` —— SHOULD-FIX 级别建议改用便捷方法，不驳回。
 
 ## 评审输出格式
 

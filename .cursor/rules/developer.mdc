@@ -46,8 +46,9 @@ alwaysApply: true
 - CRUD 命名统一：`create`/`update`/`delete`/`findById`/`page`
 
 ## 用户上下文与数据权限
-- 控制层：`SecurityUtils` 或 `IContextManager` 均可
-- **非控制层 MUST 注入 `cn.structured.starter.context.manager.IContextManager` 调 `getUser()`**（⚠️ 包名 `cn.structured.starter.context.*`，不是 `cn.structured.security.context.*`）
+- 控制层：`SecurityUtils` 或 `UserContext` 均可
+- **非控制层 MUST 用 `cn.structured.security.context.UserContext` 静态方法**（`getLongUserId()` / `get()` 等），无需注入。⚠️ `UserContext` 在 `cn.structured.security.context.*`（security-core），**不是** `cn.structured.starter.context.*`
+- 优先用 `getLongUserId()` 等 Long 型方法，避免手写 `Long.parseLong(...)`
 - 消息事件 MUST 经 `DataScopeStreamBridge`（经 `EventManager` + `MESSAGE_EVENT` 自动路由）
 - 缓存 MUST 用 `DataScopeCacheManager`；Redis MUST 用 `DataScopeRedisTemplate`；**禁止**直接用原生 `CacheManager` / `RedisTemplate`
 

@@ -195,11 +195,32 @@ public class OrderEventListener {
 
 ## 安全与用户上下文（规则 13）
 
-- **控制层**：使用 `cn.structured.security.util.SecurityUtils` 或 **`cn.structured.starter.context.manager.IContextManager`** 均可。
-- **非控制层（Service / Domain / Infra / Assembler / 异步任务）**：**MUST 通过注入 `IContextManager` 调用 `getUser()` 获取当前用户**，返回 `cn.structured.security.entity.UserContextEntity`。
+- **控制层**：使用 `cn.structured.security.util.SecurityUtils` 或 **`cn.structured.security.context.UserContext`** 均可。
+- **非控制层（Service / Domain / Infra / Assembler / 异步任务）**：**MUST 通过 `UserContext` 静态方法获取当前用户**，无需注入。
   **原因**：Service 可能被非 HTTP 入口（消息消费、定时任务、内部 RPC、其他 Service）调用，此时无 `HttpServletRequest` / `SecurityContextHolder` 可用，直接依赖安全框架工具会拿不到用户。
-- ⚠️ **包名陷阱**：用户上下文模块包名是 `cn.structured.starter.context.*`（注意是 `starter`），**不是** `cn.structured.security.context.*`。
-- `IContextManager` 主要方法：`getUser()` / `getUserByUserId(userId)` / `login(user)` / `updateUser(user)` / `logout()`。详见 [`components.md`](components.md) 第 2 节。
+
+**`UserContext` 常用静态方法**（位于 `structure-security-core` 模块）：
+
+| 方法 | 返回 |
+|---|---|
+| `UserContext.get()` | `UserContextEntity`（可空） |
+| `UserContext.getLongUserId()` | `Long`（**推荐**，免手写 `Long.parseLong`） |
+| `UserContext.getUserId()` | `String` |
+| `UserContext.getLongDeptId()` / `getLoneDeptIds()` | `Long` / `Set<Long>` |
+| `UserContext.getLongRoles()` / `getLongPermissions()` | `Set<Long>` |
+
+```java
+// ✅ 推荐
+Long userId = UserContext.getLongUserId();
+if (userId == null) { throw new OrderException(OrderExceptionEnum.NOT_LOGGED_IN); }
+
+// ❌ 避免（框架已提供 getLongUserId）
+UserContextEntity e = UserContext.get();
+if (e != null) { return Long.parseLong(e.getUserId()); }
+```
+
+- ⚠️ **包名陷阱**：`UserContext` 在 `cn.structured.security.context.*`（`structure-security-core` 模块），**不是** `cn.structured.starter.context.*`（那是底层 SPI `IContextManager` 所在）。
+- ⚠️ **已知拼写 bug**：`getLoneDeptIds()` 应为 `getLongDeptIds()`，新代码使用需注意。详见 [`components.md`](components.md) 第 2 节。
 
 ## 日志
 

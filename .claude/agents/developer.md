@@ -46,8 +46,9 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 
 ## 用户上下文与数据权限
 
-- 控制层：`SecurityUtils` 或 `IContextManager` 均可。
-- **非控制层 MUST 注入 `cn.structured.starter.context.manager.IContextManager` 调 `getUser()`**（Service 可能被非 HTTP 入口调用，无 `SecurityContextHolder` 可用）。⚠️ 包名是 `cn.structured.starter.context.*`，**不是** `cn.structured.security.context.*`。
+- 控制层：`SecurityUtils` 或 `UserContext` 均可。
+- **非控制层 MUST 用 `cn.structured.security.context.UserContext` 静态方法**（`UserContext.getLongUserId()` / `UserContext.get()` 等），**无需注入**（Service 可能被非 HTTP 入口调用，无 `SecurityContextHolder` 可用）。⚠️ `UserContext` 在 `cn.structured.security.context.*`（structure-security-core），**不是** `cn.structured.starter.context.*`。
+- 优先用 `getLongUserId()` / `getLongRoles()` 等 Long 型便捷方法，避免手写 `Long.parseLong(...)`。
 - 消息事件 MUST 经 `cn.structured.datascope.message.wrapper.DataScopeStreamBridge`（经 `EventManager` + `MESSAGE_EVENT` 自动路由）。
 - 缓存 MUST 用 `cn.structured.datascope.cache.manager.DataScopeCacheManager`；Redis MUST 用 `cn.structured.datascope.redis.template.DataScopeRedisTemplate`。**禁止**直接用原生 `CacheManager` / `RedisTemplate`。
 

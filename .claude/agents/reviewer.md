@@ -47,6 +47,8 @@ tools: Read, Grep, Glob, Bash
 
 - `cn.structured.{X}.repository.repository.*`（双 "repository"）— 修正需与作者确认。
 - 旧 Controller javadoc 含 `@since JDK1.8` 但项目已 JDK 17+ —— NIT。
+- `UserContext.getLoneDeptIds()` 拼写错误（"Lone" 应为 "Long"）— 框架源码问题，业务使用合理，**不因拼写驳回业务 PR**。
+- 业务用 `UserContext.get()` + `Long.parseLong(...)` 而非 `UserContext.getLongUserId()` —— SHOULD-FIX，不驳回。
 
 ## 反馈格式
 
