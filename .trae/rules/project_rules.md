@@ -60,6 +60,21 @@
 
 - 租户标识从上下文取；**禁止** 从请求参数/Header 读；**禁止** SQL 手写 `WHERE tenant_id = ?`。
 
+## 远程调用与 JSON
+
+- **MUST** 服务间调用用 `@FeignClient`（**禁止** `RestTemplate`/`WebClient`/手写 HTTP）；优先 Spring Cloud Alibaba（Nacos/Sentinel/Seata）。
+- **MUST** 每个 `@FeignClient` 声明 `fallback`/`fallbackFactory`。
+- **MUST** 强一致性场景 fallback 抛 `CommonException` 中断业务（**禁止** 静默兜底）。
+- **MUST** JSON 用 FastJSON（`JSON.toJSONString`/`JSON.parseObject`）；**禁止** 混用 Jackson/Gson。
+
+## 测试工作流（MUST）
+
+- 每开发一个功能 **立即** 写单元测试，**单测通过才能做下一个功能**。
+- 功能有修改时 **同步修改测试** 并通过。
+- 业务完成后写 **业务流程集成测试**（`XxxIT`），通过才算交付。
+- **提交前**：本地 `mvn clean test` 全部通过 + `mvn clean package -DskipTests` 编译通过。
+- **禁止** 测试/编译失败仍提交。
+
 ---
 
 **详细规则以 `prompts/` 为准。** 发现 AI 生成错误代码时，按仓库 `README.md` 的"生成错误时如何修正规则"章节处理。

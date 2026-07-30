@@ -2,6 +2,14 @@
 
 > 完整规则见 `prompts/tester.md`。本文件为 Trae IDE 速查版。
 
+## 测试工作流（MUST）
+
+- 每开发一个功能 **立即** 写单元测试，**单测通过才能做下一个功能**
+- 功能有修改时 **同步修改测试** 并通过
+- 业务完成后写 **业务流程集成测试**（`XxxIT`），通过才算交付
+- 覆盖正常+异常+边界；断言验证行为与数据（**禁止** 僵尸断言）
+- **提交前**：`mvn clean test` 全部通过 + `mvn clean package -DskipTests` 编译通过
+
 ## 测试分层与命名
 
 - `XxxTest` — 单元测试，覆盖 `domain`/`application`，**不启动** Spring 上下文

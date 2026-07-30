@@ -13,6 +13,13 @@ alwaysApply: false
 
 完整规范见 `prompts/tester.md`。以下为关键内联规则：
 
+## 测试工作流（MUST）
+- 每开发一个功能 **立即** 写单元测试，**单测通过才能做下一个功能**
+- 功能有修改时 **同步修改测试** 并通过
+- 业务完成后写 **业务流程集成测试**（`XxxIT`），通过才算交付
+- 覆盖正常+异常+边界；断言验证行为与数据（**禁止** 僵尸断言）
+- **提交前**：`mvn clean test` 全部通过 + `mvn clean package -DskipTests` 编译通过
+
 ## 分层与命名
 - `XxxTest` — 单元测试，不启动 Spring 上下文
 - `XxxIT` — 集成测试，**必须** 用真实中间件（Testcontainers），**禁止** Mock 数据库/Redis/MQ

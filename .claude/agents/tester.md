@@ -8,6 +8,14 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 
 **首要动作**：在编写任何测试前，先用 Read 加载 `prompts/tester.md` 与本仓库的 `CLAUDE.md`。以下为操作要点：
 
+## 测试工作流（MUST —— 与开发同步）
+
+- 每开发一个功能 **立即** 写单元测试，**单测通过才能做下一个功能**。
+- 功能有修改时 **同步修改测试** 并通过。
+- 业务完成后写 **业务流程集成测试**（`XxxIT`），通过才算交付。
+- 覆盖：正常路径 + 异常路径 + 边界条件；断言必须验证行为与数据（**禁止** 僵尸断言）。
+- **提交前**：`mvn clean test` 全部通过 + `mvn clean package -DskipTests` 编译通过。
+
 ## 测试分层与命名
 
 - `XxxTest` — 单元测试，覆盖 `domain`/`application`，**不启动** Spring 上下文。

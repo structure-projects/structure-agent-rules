@@ -222,6 +222,63 @@ if (e != null) { return Long.parseLong(e.getUserId()); }
 - ⚠️ **包名陷阱**：`UserContext` 在 `cn.structured.security.context.*`（`structure-security-core` 模块），**不是** `cn.structured.starter.context.*`（那是底层 SPI `IContextManager` 所在）。
 - ⚠️ **已知拼写 bug**：`getLoneDeptIds()` 应为 `getLongDeptIds()`，新代码使用需注意。详见 [`components.md`](components.md) 第 2 节。
 
+## 远程调用（RPC）
+
+### Feign 使用（MUST）
+
+- **MUST** 微服务间远程调用使用 **Spring Cloud OpenFeign**（`@FeignClient` + `@EnableFeignClients`）。
+- **禁止** 裸用 `RestTemplate` / `WebClient` / 手写 `HttpClient` / `HttpURLConnection` 做服务间调用。
+- **MUST** 优先使用 **Spring Cloud Alibaba** 生态组件：Nacos（注册发现 / 配置）、Sentinel（熔断限流）、Seata（分布式事务）。
+
+### Fallback 降级（MUST）
+
+- **MUST** 每个 `@FeignClient` 声明 `fallback` 或 `fallbackFactory`，失败时降级处理 —— 保证 **业务连续** 且 **单元测试可通过**（测试中可用 fallback 桩验证降级路径）。
+
+```java
+@FeignClient(name = "structure-order", fallback = OrderFeignFallback.class)
+public interface OrderFeign {
+
+    @GetMapping("/api/orders/{id}")
+    ResResultVO<OrderVO> findById(@PathVariable("id") Long id);
+}
+
+@Component
+public class OrderFeignFallback implements OrderFeign {
+    @Override
+    public ResResultVO<OrderVO> findById(Long id) {
+        // 弱一致性场景：返回兜底数据或空
+        return ResultUtilSimpleImpl.fail(OrderExceptionEnum.ORDER_SERVICE_UNAVAILABLE.getCode(),
+                OrderExceptionEnum.ORDER_SERVICE_UNAVAILABLE.getMessage());
+    }
+}
+```
+
+### 强一致性场景（MUST 抛异常中断）
+
+- **MUST** 强一致性场景（资金、库存扣减、账务、订单状态机推进等）：fallback 中 **不返回兜底数据**，直接抛 `CommonException` **中断业务**：
+
+```java
+@Component
+public class InventoryFeignFallback implements InventoryFeign {
+    @Override
+    public ResResultVO<Void> deduct(InventoryDeductDTO dto) {
+        // 强一致性：中断业务，不静默降级
+        throw new CommonException(
+                InventoryExceptionEnum.INVENTORY_SERVICE_UNAVAILABLE.getCode(),
+                InventoryExceptionEnum.INVENTORY_SERVICE_UNAVAILABLE.getMessage());
+    }
+}
+```
+
+- **SHOULD** 跨服务强一致性优先考虑 **Seata 分布式事务**，而非仅靠 fallback 抛异常。
+
+## JSON 序列化（MUST）
+
+- **MUST** JSON 序列化与工具方法优先使用 **FastJSON**（`com.alibaba.fastjson` / `com.alibaba.fastjson2`）。
+- `structure-restful-web-starter` 已内置 FastJson `HttpMessageConverter`（**Long → String 防 JS 精度丢失**），Controller 出参无需手动处理。
+- **MUST** 工具方法优先用 `JSON.toJSONString()` / `JSON.parseObject()` / `JSONArray` / `JSONObject`（FastJSON API）。
+- **禁止** 混用 Jackson `ObjectMapper` / Gson 做业务序列化（框架内部 Spring 默认 Jackson 不干预，业务代码不主动引入）。
+
 ## 日志
 
 - **MUST** 使用 SLF4J 或 Lombok `@Slf4j`（真实代码中 `@Slf4j` 普遍）。
@@ -233,6 +290,16 @@ if (e != null) { return Long.parseLong(e.getUserId()); }
 - **MUST** `*-ui-components` 在 **开发时** 通过 `file:../../structure-{X}/structure-{X}-ui-components` 本地引用；**正式发布时发布到 npm**（`@structure-projects/{领域}-ui-components`），便于其他场景复用。
 - **MUST** 公开 npm 包发布到 scope `@structure-projects`；私有包不要使用该 scope。
 - **SHOULD** 复用 `@structure-projects/components`、`@structure-projects/gateway-client`、`@structure-projects/wujie-subapp`。
+
+## 测试工作流（MUST —— 与开发同步进行）
+
+- **MUST** 每开发一个功能，**立即**编写对应单元测试；**单测通过后才能开始下一个功能**。
+- **MUST** 功能代码有修改时，**同步修改对应测试代码**并保证通过。
+- **MUST** 业务模块编写完成后，编写 **业务流程集成测试**（`XxxIT`），通过后业务才算交付。
+- **MUST** 提交代码前：本地 `mvn clean test` 全部通过 + `mvn clean package -DskipTests` 编译通过。
+- **禁止** 在测试失败或编译失败的情况下提交代码。
+
+详细测试规范见 [`tester.md`](tester.md)。
 
 ## 提交前自检
 
@@ -248,3 +315,9 @@ if (e != null) { return Long.parseLong(e.getUserId()); }
 - [ ] 非控制层是否通过 **用户上下文** 而非 `SecurityUtils` 获取当前用户？
 - [ ] 缓存 / 事件是否走了框架的数据权限包装工具？
 - [ ] 租户上下文是否来自框架而非请求参数？
+- [ ] **服务间调用是否用 `@FeignClient` 且声明了 `fallback`/`fallbackFactory`？强一致性场景 fallback 是否抛 `CommonException`？**
+- [ ] **JSON 序列化是否用 FastJSON（`JSON.toJSONString` / `JSON.parseObject`），未混用 Jackson/Gson？**
+- [ ] **本次开发的功能是否都有对应单元测试，且 `mvn clean test` 本地全部通过？**
+- [ ] **修改的既有功能，其测试代码是否已同步修改并通过？**
+- [ ] **业务流程完成后是否编写了流程级集成测试（`XxxIT`）并通过？**
+- [ ] **`mvn clean package -DskipTests` 编译是否通过？**

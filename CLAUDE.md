@@ -20,6 +20,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Maven groupId | `cn.structured` | 所有 Java 组件统一使用 |
 | npm scope | `@structure-projects` | 所有前端组件统一使用 |
 | 组织定位 | "结构化开发为规范而生" | 强调规范优先 |
+| 微服务组件偏好 | **Spring Cloud Alibaba** | Nacos（注册发现/配置）/ Sentinel（熔断限流）/ Seata（分布式事务） |
+| JSON 序列化偏好 | **FastJSON** | `structure-restful-web-starter` 已内置 FastJson 转换器（Long→String 防精度丢失）；业务禁用 Jackson/Gson |
+| 服务间调用 | **Spring Cloud OpenFeign** | 必须声明 `fallback`/`fallbackFactory`；强一致性场景 fallback 抛 `CommonException` 中断业务 |
 
 ### 包名硬约定（已在 structure-user / structure-org 真实代码中验证）
 

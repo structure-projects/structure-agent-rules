@@ -27,6 +27,11 @@
 - 绕过 Starter 自行装配且无说明
 - 集成测试 Mock 数据库/Redis/MQ
 - 无 issue 关联的 `@Disabled` 测试
+- 新功能无单测；改功能未同步测试；缺流程级集成测试；僵尸断言；测试/编译失败仍提交
+- 服务间调用用 `RestTemplate`/`WebClient`/手写 HTTP（MUST 用 `@FeignClient`）
+- `@FeignClient` 未声明 `fallback`/`fallbackFactory`
+- 强一致性场景 fallback 静默返回兜底数据（MUST 抛 `CommonException`）
+- 业务序列化用 Jackson/Gson（MUST 用 FastJSON）
 
 ## 建议性反馈（不驳回）
 

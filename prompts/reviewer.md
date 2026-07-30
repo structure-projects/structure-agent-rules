@@ -24,16 +24,22 @@
 10. **数据权限**：缓存与事件是否使用框架的数据权限包装工具？
 11. **多租户**：租户上下文来源是否正确？是否存在租户串数据风险？是否在 SQL 手写 `WHERE tenant_id = ?`？
 12. **安全**：SQL 注入 / XSS / 越权 / 敏感信息泄露 / 重放。
-13. **兼容性**：版本是否匹配（Spring Boot 4.0.6 + JDK 17 + `jakarta.*`；MyBatis-Plus 3.5.16；`structure-infra 1.3.1`）？
-14. **测试**：新增/修改的公共方法是否有对应测试？集成测试是否用 Testcontainers 真实中间件？
-15. **CI/CD**：
+13. **远程调用**：服务间调用是否用 `@FeignClient`（非 `RestTemplate` / `WebClient` / 手写 HTTP）？是否声明 `fallback` / `fallbackFactory`？强一致性场景 fallback 是否抛 `CommonException` 中断业务（非静默返回兜底数据）？
+14. **JSON**：业务序列化是否用 FastJSON？是否混用 Jackson `ObjectMapper` / Gson？
+15. **兼容性**：版本是否匹配（Spring Boot 4.0.6 + JDK 17 + `jakarta.*`；MyBatis-Plus 3.5.16；`structure-infra 1.3.1`）？
+16. **测试**：
+    - 新增功能是否有对应单元测试？修改的功能其测试是否同步更新？
+    - 业务流程完成后是否有流程级集成测试（`XxxIT`）？
+    - 集成测试是否用 Testcontainers 真实中间件？
+    - 断言是否有效（非僵尸断言）？
+17. **CI/CD**：
     - `.github/workflows/` 是否有 `test.yml` / `build-and-push.yml` / `release.yml` / `publish.yml`（模板见 `prompts/ci-cd.md`）？
     - 不发布 Maven Central 的模块（`boot` / `sample` / `example`）是否在 **自身 pom.xml** 声明 `<maven.deploy.skip>true</maven.deploy.skip>`？
     - 是否有硬编码的密码 / 密钥 / Token（凭据应走 GitHub Secrets）？
     - `scripts/` 是否含 `mavenbuild.sh` / `install.sh` / `dockerbuild.sh` / `release.sh`？
     - `structure-{X}-boot/` 是否含 `Dockerfile` + `liveness.sh`？
     - 仓库内是否残留示例工程（`*-sample` / `*-example`）？正式项目不保留示例工程。
-16. **文档**：README / CHANGELOG / 配置示例是否同步更新？
+18. **文档**：README / CHANGELOG / 配置示例是否同步更新？
 
 ## 硬性驳回项（出现即打回）
 
@@ -63,6 +69,15 @@
 - 集成测试 Mock 数据库 / Redis / MQ。
 - 提交无 issue 关联的 `@Disabled` 测试。
 - 项目缺少单元测试或集成测试（所有项目 MUST 同时具备 `XxxTest` 与 `XxxIT`）。
+- **新功能没有对应单元测试**（每开发一个功能 MUST 同步编写单测）。
+- **功能代码被修改但其测试代码未同步更新**（留下失败/过时测试）。
+- **业务流程完成后缺少流程级集成测试**。
+- 僵尸断言（只 `assertNotNull` / 只验证返回码 200，无行为与数据断言）。
+- 测试失败或编译失败仍提交/合入代码。
+- 服务间调用使用 `RestTemplate` / `WebClient` / 手写 HTTP client（MUST 用 `@FeignClient`）。
+- `@FeignClient` 未声明 `fallback` / `fallbackFactory`。
+- 强一致性场景 fallback 静默返回兜底数据（MUST 抛 `CommonException` 中断业务）。
+- 业务代码使用 Jackson `ObjectMapper` / Gson 做序列化（MUST 用 FastJSON：`JSON.toJSONString` / `JSON.parseObject`）。
 - 仓库内残留示例工程（`*-sample` / `*-example`）。
 - 代码 / 配置 / yml / README 中硬编码密码、密钥、Token（凭据应走 GitHub Secrets）。
 - 不发布 Maven Central 的模块（`boot` / `sample` / `example`）未在自身 pom.xml 声明 `<maven.deploy.skip>true</maven.deploy.skip>`。

@@ -158,12 +158,39 @@ if (e != null) { return Long.parseLong(e.getUserId()); }
 - **MUST** 子应用入口调用 `createWujieSubapp().init()`（来自 `@structure-projects/wujie-subapp`）。
 - **MUST** HTTP 请求用 `@structure-projects/gateway-client` 或 `@structure-projects/components` 的 default `request`（自动带 7 个网关 Header）。
 
+## 13. 远程调用与 JSON
+
+### Feign（MUST）
+
+- **MUST** 服务间远程调用使用 Spring Cloud OpenFeign（`@FeignClient` + `@EnableFeignClients`）；**禁止** `RestTemplate` / `WebClient` / 手写 HTTP。
+- **MUST** 优先使用 **Spring Cloud Alibaba**：Nacos（注册发现/配置）、Sentinel（熔断限流）、Seata（分布式事务）。
+- **MUST** 每个 `@FeignClient` 声明 `fallback` / `fallbackFactory` —— 保证业务连续 + 单测可验证降级路径。
+- **MUST** 强一致性场景（资金/库存/账务/状态机）：fallback 中 **抛 `CommonException` 中断业务**，**禁止** 静默返回兜底数据；跨服务强一致性 **SHOULD** 用 Seata。
+
+### JSON（MUST）
+
+- **MUST** JSON 序列化与工具方法优先 **FastJSON**（`JSON.toJSONString()` / `JSON.parseObject()`）。
+- `structure-restful-web-starter` 已内置 FastJson 转换器（Long→String 防 JS 精度丢失）。
+- **禁止** 业务代码混用 Jackson `ObjectMapper` / Gson。
+
 ## 14. 测试
+
+### 测试工作流（MUST —— 与开发同步进行）
+
+- **MUST** 每开发一个功能，**立即**编写对应单元测试；**单测通过后才能开始下一个功能**。
+- **MUST** 功能代码有修改时，**同步修改对应测试代码**并保证通过。
+- **MUST** 业务模块编写完成后，编写 **业务流程集成测试**（`XxxIT`），通过后业务才算交付。
+- **MUST** 提交代码前：本地 `mvn clean test` 全部通过 + `mvn clean package -DskipTests` 编译通过。
+- **禁止** 在测试失败或编译失败的情况下提交/合入/发布代码。
+
+### 测试分层与有效性
 
 - `XxxTest` — 单元测试，**不启动** Spring 上下文；`XxxIT` — 集成测试，**必须** 用真实中间件（Testcontainers）。
 - **禁止** Mock 数据库 / Redis / MQ；**禁止** Mock 自己项目的 `Repository` / `Service`。
+- **MUST** 覆盖：正常路径 + 异常路径 + 边界条件。
+- **MUST** 断言有效（验证行为与数据）；**禁止** 僵尸断言（只 `assertNotNull` / 只看返回码 200）。
 - **MUST** 覆盖：多租户隔离、统一异常返回统一错误码、`@ReadDelegate` 失败回退、`UserContext.getLongUserId()` 返回 null 的兜底。
-- **禁止** 僵尸断言（只 `assertNotNull`）；**禁止** `Thread.sleep` 等待异步（用 Awaitility）；**禁止** 无 issue 关联的 `@Disabled`。
+- **禁止** `Thread.sleep` 等待异步（用 Awaitility）；**禁止** 无 issue 关联的 `@Disabled`。
 
 ## 15. 提交前自检
 
@@ -178,6 +205,10 @@ if (e != null) { return Long.parseLong(e.getUserId()); }
 - [ ] 缓存 / Redis / 消息事件是否走了框架的数据权限包装工具？
 - [ ] 分页签名是否为 `page({X}Query query, ReqPage reqPage)`？
 - [ ] 租户上下文是否来自框架而非请求参数？
+- [ ] **本次开发的功能是否都有对应单元测试并通过？**
+- [ ] **修改的既有功能，其测试是否已同步更新并通过？**
+- [ ] **业务流程完成后是否有流程级集成测试（`XxxIT`）并通过？**
+- [ ] **本地 `mvn clean test` 全部通过 + `mvn clean package -DskipTests` 编译通过？**
 
 ---
 

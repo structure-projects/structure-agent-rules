@@ -75,7 +75,9 @@ structure-{X}/
 - **MUST** RESTful，统一使用生态的"统一响应体 + 统一错误码"，不自定义返回结构。
 - **MUST** 多租户场景不在 URL / Header 中显式传租户 ID —— 由 `structure-gateway` 识别并写入上下文。
 - **MUST** 网关侧已具备 Token / 重放防护 / QPS-日-月限流；业务服务**禁止**重复实现。
-- **SHOULD** 内部服务间调用走 Feign，且依赖 `structure-cloud-dependencies` 管理版本。
+- **MUST** 服务间调用使用 **Spring Cloud OpenFeign**（`@FeignClient` + `fallback`），优先 **Spring Cloud Alibaba**（Nacos / Sentinel / Seata）。详细约束见 [`developer.md`](developer.md) 远程调用章节。
+- **MUST** JSON 序列化优先 **FastJSON**（`structure-restful-web-starter` 已内置 FastJson 转换器，Long→String 防精度丢失）。
+- **SHOULD** 跨服务强一致性用 **Seata 分布式事务**；弱一致性用 Feign fallback 降级。
 
 ## 安全与权限
 

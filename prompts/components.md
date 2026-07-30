@@ -78,7 +78,7 @@ structure-boot/
 | `structure-redisson-starter` | Redisson 多模式（single/sentinel/cluster/master-slave） | `structure.redisson.model` + `*-server-config` |
 | `structure-minio-starter` | `MinioTemplate`（uploadFile/getPresignedObjectUrl/分片上传） | `structure.minio.*` |
 | `structure-log-starter` | `@EnableWebAopLog`、`@AspectParamLog` AOP 日志切面 | `structure.log.aop.*` |
-| `structure-rpc-starter` | `@RpcClient` 声明式 HTTP RPC + OAuth2 Token 自动管理 | `structure.rpc.serviceList.<name>.*` |
+| `structure-rpc-starter` | `@RpcClient` 声明式 HTTP RPC + OAuth2 Token 自动管理（⚠️ 用于 **外部 HTTP 服务 / 第三方 API**；**生态内部微服务间调用 MUST 用 Spring Cloud OpenFeign**，见 developer.md 远程调用章节） | `structure.rpc.serviceList.<name>.*` |
 | `structure-tenant-starter` | 多租户上下文支持 | 待查 |
 
 ### 典型用法
