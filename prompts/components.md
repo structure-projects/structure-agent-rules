@@ -28,7 +28,6 @@
 
 以下组件当前使用频率低，**使用前从对应 git 仓库 README 获取信息**，本文不维护详情：
 
-- `structure-tenant`（多租户）
 - `structure-sso`（统一登录）
 - `structure-job`（调度中心）
 - `structure-message`（消息中心）
@@ -38,6 +37,8 @@
 - `structure-agent`（AI 智能体）
 - `structure-admin` / `structure-admin-ui`（管理后台）
 - `structure-web-ui`（基础前端框架）
+
+注：`structure-tenant`（多租户）已在下文补充（取自 structure-pro/rule 验证过的配置）。
 
 ---
 
@@ -91,6 +92,16 @@ public interface UserMapper extends IBaseMapper<User> {
 }
 ```
 
+**`ResPageConvert` —— MyBatis-Plus `Page` → 生态 `ResPage` 转换**：
+
+```java
+import cn.structured.mybatis.plus.starter.convert.ResPageConvert;
+
+Page<Example> page = new Page<>(reqPage.getCurrentPage(), reqPage.getPageSize());
+Page<Example> result = exampleMapper.selectPage(page, wrapper);
+ResPage<ExampleVO> resPage = ResPageConvert.convert(result, ExampleAssembler::assembler);
+```
+
 **Redis 分布式锁**：
 
 ```java
@@ -109,6 +120,83 @@ public class UserApplication { ... }
 @AspectParamLog   // 方法级：打印入参
 @GetMapping("/{id}")
 public ResResultVO<UserVO> findById(@PathVariable Long id) { ... }
+```
+
+### 关键 Starter 配置示例
+
+**`structure-log-starter`**：
+
+```yaml
+structure:
+  log:
+    aop:
+      enable: true
+      expression: execution(public * cn.structured.example.interfaces.controller..*Controller.*(..))
+```
+
+**`structure-redis-starter`**（标准 `spring.data.redis` 配置）：
+
+```yaml
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 10000ms
+```
+
+**`structure-redisson-starter`**：
+
+```yaml
+# 单体模式
+structure:
+  redisson:
+    model: single
+    password: your-password
+    single:
+      address: redis://localhost:6379
+    cache:
+      key-group-name: example
+
+# 集群模式
+structure:
+  redisson:
+    model: cluster
+    cluster:
+      node-addresses: redis://host1:6379,redis://host2:6379,redis://host3:6379
+```
+
+**`structure-minio-starter`**（⚠️ **老项目/单体用法**）：
+
+> **新项目提示**：新项目已迁移到 **`structure-file` 文件服务**（DDD 7+1 结构的统一文件管理中心），**通过其 API 进行文件操作，不直接引入 `structure-minio-starter`**。以下配置仅供维护老项目/单体应用时参考。
+
+```yaml
+structure:
+  minio:
+    url: http://localhost:9010
+    access-key: root
+    secret-key: your-secret-key
+    endpoint-enable: true
+```
+
+**`structure-tenant-starter`**：
+
+```yaml
+structure:
+  tenant:
+    enabled: true
+    default-tenant-id: "1"
+    header:
+      enabled: true
+      name: "X-Tenant-Id"
+    param:
+      enabled: true
+      name: "tenantId"
+    resolver-order:
+      - "header"
+      - "param"
 ```
 
 ### 业务侧约束
@@ -340,6 +428,49 @@ boolean send(String bindingName, String binderType, Object data, MimeType output
 | cache | `CacheDataRuleEngine` |
 | redis | `RedisDataRuleEngine` |
 | mybatis-plus | `MySqlDataRuleEngine` |
+
+### ✅ `DataRuleEngine.filter()` —— 编程式列级权限过滤（来自 structure-pro/rule 验证）
+
+```java
+@Service
+@RequiredArgsConstructor
+public class OrderServiceImpl implements IOrderService {
+
+    private final DataRuleEngine dataRuleEngine;
+
+    @Override
+    public OrderVO findById(Long id) {
+        Order order = orderRepository.findById(id);
+        OrderVO vo = OrderAssembler.assembler(order);
+        dataRuleEngine.filter(vo, "order");  // 按 @DataScopeField 规则过滤字段
+        return vo;
+    }
+}
+```
+
+**约束**：
+- **MUST** DTO/VO 出参前调用 `dataRuleEngine.filter(dto, resourceName)`，确保 `@DataScopeField` 标注的字段按当前用户角色/权限正确隐藏。
+- **MUST** `resourceName` 与 DTO 类上 `@DataScopeRule(resource = "...")` 的值一致。
+
+### ✅ 数据权限配置项
+
+```yaml
+structure:
+  data-scope:
+    enabled: true
+    header-name: X-DataScope-Id
+    role-header-name: X-DataScope-Roles
+    permission-header-name: X-DataScope-Permissions
+```
+
+**约束**：
+- **MUST** 引入 `structure-datascope-starter` + 对应存储模块（如 `structure-datascope-mybatis-plus`）。
+- **SHOULD** 上游（gateway / Feign 调用方）按上述 Header 名传递数据权限参数，下游经 `DataScopeContext` 自动还原。
+
+### ❓ 待读源码补充
+- 行级权限 `@DataScopeRow` 的完整属性与生效机制
+- 规则引擎的 YAML 配置方式
+- `CacheDataRuleEngine` / `RedisDataRuleEngine` 的规则配置细节
 
 ---
 
@@ -991,6 +1122,76 @@ const actions = [
 
 - 🚫 **structure-cloud** —— 已 **停止维护**（"比较鸡肋"）。**依赖版本统一改在 `structure-{X}-dependencies` 与 `structure-boot` 中配置**。新代码 MUST NOT 再引入 `structure-cloud-dependencies` 或 `structure-ribbon-starter`。
 - 🚫 **structure-ruoyi / ruoyi-framework / ruoyi-pro / ruoyi-ui / structure-yudao** —— 多数 2024-09 停更，新项目禁止使用。
+
+---
+
+## structure-tenant（多租户）
+
+**包**：`cn.structured.tenant.*`（**有 d**，推断 —— 待验证）
+
+### ✅ 租户上下文（来自 structure-pro/rule 验证）
+
+**核心类**：`TenantContextHolder`（全限定名待读源码确认，疑似 `cn.structured.tenant.context.TenantContextHolder`）
+
+| 方法 | 用途 |
+|---|---|
+| `TenantContextHolder.getTenantId()` | 获取当前租户 ID（业务侧主要使用） |
+| `TenantContextHolder.setTenantId(tenantId)` | 设置当前租户 ID（框架/上游写入） |
+| `TenantContextHolder.clear()` | 清理当前租户上下文（**MUST 在请求结束调用**） |
+
+**典型用法**：
+
+```java
+@Service
+public class TenantService {
+
+    public String getCurrentTenantId() {
+        return TenantContextHolder.getTenantId();
+    }
+
+    /**
+     * 在指定租户上下文中执行任务（跨租户批处理、内部 RPC 场景）
+     */
+    public void executeInTenant(String tenantId, Runnable task) {
+        TenantContextHolder.setTenantId(tenantId);
+        try {
+            task.run();
+        } finally {
+            TenantContextHolder.clear();  // MUST finally 清理
+        }
+    }
+}
+```
+
+### ✅ 配置项
+
+```yaml
+structure:
+  tenant:
+    enabled: true
+    default-tenant-id: "1"
+    header:
+      enabled: true
+      name: "X-Tenant-Id"
+    param:
+      enabled: true
+      name: "tenantId"
+    resolver-order:
+      - "header"
+      - "param"
+```
+
+### 业务侧约束
+
+- **MUST** 业务代码通过 `TenantContextHolder.getTenantId()` 获取租户，**禁止**从 `@RequestHeader` / `@RequestParam` 读取后直接使用（规则 13）。
+- **MUST** 在 `executeInTenant` 等手动设置租户的场景中，**MUST 用 try-finally 确保 `TenantContextHolder.clear()` 被调用**，避免 ThreadLocal 泄漏。
+- **SHOULD** 租户识别顺序通过 `resolver-order` 显式声明，避免依赖默认值。
+- ⚠️ `TenantContextHolder` 的全限定包名待读 `structure-tenant` 源码补全；使用时先 grep 业务项目现有引用。
+
+### ❓ 待读源码补充
+- `TenantContextHolder` 的全限定类名与完整方法清单
+- 与 `structure-gateway` 的协作：gateway 写入、下游读取的 Filter 链
+- 租户级配置隔离方式
 
 ---
 

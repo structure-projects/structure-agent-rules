@@ -20,8 +20,10 @@
 
 | 主题 | 文件 | 适用阶段 |
 |---|---|---|
-| **项目创建约束** | [`prompts/project-scaffolding.md`](prompts/project-scaffolding.md) | 创建新项目/新模块时的选型、坐标、模块布局、初始提交物 |
+| **项目创建约束** | [`prompts/project-scaffolding.md`](prompts/project-scaffolding.md) | 创建新项目/新模块时的选型、坐标、模块布局、初始提交物、CVE 修复、构建配置 |
 | **组件使用与配置** | [`prompts/components.md`](prompts/components.md) | 各组件（structure-common / infra / security / tenant / datascope / gateway / boot / cloud）的 API、配置项、典型用法 |
+| **参数验证规范** | [`prompts/validation.md`](prompts/validation.md) | DTO 校验、分组验证（`ValidationGroups.Add/Update`）、级联 `@Valid`、自定义注解、全局异常处理 |
+| **OpenAPI 文档规范** | [`prompts/swagger.md`](prompts/swagger.md) | springdoc-openapi 依赖、注解（`@Tag` / `@Operation` / `@Schema`）、`OpenApiConfig`、分组配置 |
 
 ### 自包含模板（独立使用，不依赖 prompts/）
 

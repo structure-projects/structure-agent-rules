@@ -24,7 +24,16 @@
 - **MUST** npm scope = `@structure-projects`；前端包名 `@structure-projects/{领域}-ui` / `@structure-projects/{领域}-ui-components`。
 - **MUST** 业务 pom 放在 `structure-{领域}-dependencies/` 子目录，**仓库根目录不放 pom.xml**；通过 `<modules>` + 相对路径聚合。
 
-## 3. 模块布局（DDD 7+1 + 前端 monorepo）
+## 3. 模块布局
+
+### 3.1 形态选择（先选形态再创建）
+
+| 形态 | 模块结构 | 持久化模式 | 适用 |
+|---|---|---|---|
+| **DDD 业务中心**（**默认推荐**） | 7+1 后端模块 + 2 前端模块 | RepositoryFacade + Delegate + Entity/PO 分离 | 新建业务中心（用户、订单、商品等） |
+| **单体应用** | 4 模块（api/biz/common/dependencies） | Manager 模式（`IManager extends IService`） | 小型工具、内部服务、管理后台 |
+
+### 3.2 DDD 7+1 + 前端 monorepo（默认）
 
 **MUST** 按以下结构创建：
 
@@ -45,6 +54,23 @@ structure-{X}/
 ├── README.md                          # 项目说明（MUST 与代码同步）
 └── PROJECT_RULES.md                   # 本项目的特殊规范（可选）
 ```
+
+### 3.3 单体 4 模块（老项目兼容形态）
+
+```
+structure-{X}/
+├── structure-{X}-api/                 # 控制层（controller/ + 启动类）
+├── structure-{X}-biz/                 # 业务层（service/ + manager/ + mapper/ + entity/ + assembler/ + config/）
+├── structure-{X}-common/              # 公共层（dto/ + vo/ + query/ + enums/ + exception/ + constant/）
+└── structure-{X}-dependencies/        # 父 POM
+```
+
+**单体形态约束**：
+
+- **MUST** 使用 Manager 模式：`I{X}Manager extends IService<{X}Entity>` + `{X}ManagerImpl extends ServiceImpl<{X}Mapper, {X}Entity>`。
+- **MUST** Entity 直接使用 `@TableId` / `@TableField` / `@TableLogic` 注解（**不分离 Entity/PO**）。
+- **禁止** 在单体项目中强行套用 DDD 的 RepositoryFacade / Delegate 模式。
+- 跨形态通用规则（统一响应、统一异常、命名、validation、swagger、`UserContext`、数据权限、多租户）**仍 MUST 遵守**。
 
 ## 4. 包名（MUST）
 
@@ -76,6 +102,109 @@ structure-{X}/
 - **MUST** 使用 Flyway 管理迁移；脚本位于 `structure-{X}-repository-mybatis/src/main/resources/db/migration/`。
 - **MUST** 命名 `V{版本}__{描述}.sql`（如 `V1.0.0__CREATE_TABLE.sql`、`V1.0.1__INIT_DATA.sql`）。
 - **SHOULD** 所有表含基础字段：`id`（主键）/ `deleted`（逻辑删除）/ `create_time` / `update_time` / `create_by` / `update_by`。
+
+## 7.1 依赖管理（dependencies 模块）
+
+**MUST** `structure-{X}-dependencies/pom.xml` 包含以下版本属性与 CVE 修复：
+
+```xml
+<properties>
+    <revision>1.0.0-SNAPSHOT</revision>
+    <spring-boot.version>4.0.6</spring-boot.version>
+    <spring-cloud.version>2025.1.0</spring-cloud.version>
+    <spring-alibaba.version>2025.1.0.0</spring-alibaba.version>
+    <mybatis-plus.version>3.5.16</mybatis-plus.version>
+    <springdoc.version>3.0.3</springdoc.version>
+    <structure.version>1.4.4</structure.version>
+    <structure-security.version>1.1.5</structure-security.version>
+    <structure-infra.version>1.3.1</structure-infra.version>
+    <structure-tenant.version>1.4.3</structure-tenant.version>
+    <structure-datascope.version>1.0.3</structure-datascope.version>
+    <testcontainers.version>1.20.6</testcontainers.version>
+
+    <!-- CVE 修复版本（⚠️ 仅框架 < 1.4.4 需显式声明；1.4.4 起框架已内置处理，无需再加） -->
+    <bouncycastle.version>1.84</bouncycastle.version>           <!-- CVE-2026-0636 -->
+    <commons-fileupload.version>1.6.0</commons-fileupload.version> <!-- CVE-2025-48976 -->
+</properties>
+
+<!-- ⚠️ 以下 CVE 修复依赖仅当 parent 框架版本 < 1.4.4 时才需显式声明 -->
+<dependencyManagement>
+<dependencies>
+    <!-- CVE-2026-0636 修复（框架 < 1.4.4 时） -->
+    <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk18on</artifactId>
+        <version>${bouncycastle.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpkix-jdk18on</artifactId>
+        <version>${bouncycastle.version}</version>
+    </dependency>
+
+    <!-- CVE-2025-48976 修复（框架 < 1.4.4 时） -->
+    <dependency>
+        <groupId>commons-fileupload</groupId>
+        <artifactId>commons-fileupload</artifactId>
+        <version>${commons-fileupload.version}</version>
+    </dependency>
+</dependencies>
+</dependencyManagement>
+```
+
+**MUST** Spring Boot 4 项目使用 **`mybatis-plus-spring-boot4-starter`**（**不是** `mybatis-plus-boot-starter`）：
+
+```xml
+<dependency>
+    <groupId>com.baomidou</groupId>
+    <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+</dependency>
+```
+
+## 7.2 构建配置
+
+**MUST** `maven-compiler-plugin` 加 `-parameters` 编译参数（保留方法参数名，利于 Spring MVC 反射绑定与 Swagger 文档生成）：
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <compilerArgs>
+            <arg>-parameters</arg>
+        </compilerArgs>
+    </configuration>
+</plugin>
+```
+
+**MUST** `boot` 模块配置 `spring-boot-maven-plugin` 的 `repackage` goal：
+
+```xml
+<plugin>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-maven-plugin</artifactId>
+    <executions>
+        <execution>
+            <goals>
+                <goal>repackage</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+**SHOULD** 开启资源 filtering（让 `application.yml` 可使用 `${project.version}` 等占位符）：
+
+```xml
+<build>
+    <resources>
+        <resource>
+            <directory>src/main/resources</directory>
+            <filtering>true</filtering>
+        </resource>
+    </resources>
+</build>
+```
 
 ## 8. 禁止事项
 

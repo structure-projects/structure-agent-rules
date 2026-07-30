@@ -42,8 +42,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `structure-datascope` | `1.0.3` | |
 | `structure-tenant` | `1.4.3` | |
 | Testcontainers | `1.20.6` | 集成测试采用真实中间件 |
+| springdoc-openapi | `3.0.3` | OpenAPI 文档 |
+
+**CVE 修复版本**（**仅框架 < 1.4.4 需显式处理**；1.4.4 起框架已内置，无需再加）：
+
+| 依赖 | 版本 | 修复 |
+|---|---|---|
+| bouncycastle | `1.84` | CVE-2026-0636 |
+| commons-fileupload | `1.6.0` | CVE-2025-48976 |
 
 Maven 使用 `${revision}` CI-friendly 版本（如 `1.1.0-SNAPSHOT`）。
+
+⚠️ Spring Boot 4 项目 **MUST** 使用 `mybatis-plus-spring-boot4-starter`（**不是** `mybatis-plus-boot-starter`）。
+
+## 项目形态与适用规范（重要）
+
+生态内存活 **两类项目形态**，规范需分别适配：
+
+| 形态 | 模块结构 | 持久化模式 | 适用 |
+|---|---|---|---|
+| **DDD 微服务**（**新项目默认**） | 7+1 模块（common/domain/infra/repository-mybatis/application/interfaces/boot/dependencies）+ 前端 monorepo | RepositoryFacade + Delegate + Entity/PO 分离 | structure-user / structure-org / structure-tenant / structure-resource 等业务中心 |
+| **单体应用** | 4 模块（api / biz / common / dependencies） | Manager 模式（`IManager extends IService` / `ManagerImpl extends ServiceImpl`） | structure-mono-template 及历史单体项目 |
+
+**兼容原则**：
+
+1. **新业务中心 MUST 用 DDD 7+1**；**单体项目 MAY 用 4 模块 + Manager 模式**，不强制迁移。
+2. **老项目兼容**：`structure-pro` 等历史项目仍基于 4 模块 + Manager 模式，整体用法与现行规范相近。AI 在这类仓库工作时 **沿用其本地规范**（`rule/` 目录），**不强行套用 DDD 规范**。
+3. 跨形态通用的规则（统一响应 `ResResultVO`、统一异常 `CommonException`、命名约定、参数验证、Swagger、用户上下文 `UserContext`、数据权限、多租户）**两种形态都适用**。
+4. 仅 DDD 形态适用的规则：RepositoryFacade / Delegate / `toEntity`/`toPo` 重写 / `ICrudRepository` 继承 / Entity/PO 分离。
+5. 仅单体形态适用的规则：Manager 模式、Entity 直接用 `@TableId`/`@TableLogic`、`manager.count(Wrappers...)` 直查。
+
+**老项目清单**（AI 工作在这些仓库时按本地规范，不按 DDD 新规范）：
+
+- `structure-pro` —— 云原生微服务脚手架（含 `rule/` 本地规范，基于 4 模块 + Manager）
+- 其他仍基于 4 模块结构的单体项目（以各仓库 `rule/` / `PROJECT_RULES.md` / README 实际描述为准，用前先验证）
+
+🚫 **不兼容的老项目**（已弃用，新项目禁止）：`structure-ruoyi` / `ruoyi-framework` / `ruoyi-pro` / `ruoyi-ui` / `structure-yudao` / `structure-cloud`。
 
 ## 已验证的真实模块布局（structure-user / structure-org 通用）
 
@@ -91,7 +125,7 @@ structure-{X}/
 - **structure-sso** — 统一登录（Vue）。
 
 ### 业务中心（微服务）
-用户 `structure-user` / 组织 `structure-org` / 租户 `structure-tenant` / 成员 `structure-member` / 账户 `structure-account` / 资源 `structure-resource` / 订单 `structure-order` / 商品 `structure-product` / 买家 `structure-seller` / 支付 `structure-pay` / 内容 `structure-content` / 任务 `structure-task` / 激励 `structure-incentive` / 广告 `structure-advertising` / 风控 `structure-risk`。
+用户 `structure-user` / 组织 `structure-org` / 租户 `structure-tenant` / 成员 `structure-member` / 账户 `structure-account` / 资源 `structure-resource` / 订单 `structure-order` / 商品 `structure-product` / 买家 `structure-seller` / 支付 `structure-pay` / 内容 `structure-content` / 任务 `structure-task` / 激励 `structure-incentive` / 广告 `structure-advertising` / 风控 `structure-risk` / 文件 `structure-file`（统一文件管理服务，新项目文件操作走此服务 API，不直接用 `structure-minio-starter`）。
 
 ### 平台服务
 调度 `structure-job` / 消息 `structure-message` / 监控 `structure-monitor` / 运维 `structure-ops` / 告警 `structure-alert` / 审计 `structure-audit` / 数据权限 `structure-datascope`。
@@ -140,6 +174,11 @@ structure-{X}/
 - `structure-multi-module-template` README 描述了完整目录与 `PROJECT_RULES.md`，但仓库实际只有 `README.md`。
 - `structure-docs` README 引用了 `pd.md`，但根目录无此文件。
 - 多个 `structure-*` 业务中心仓库无 README，仅有描述字段。
+
+## 已识别的"老项目本地规范"（不算不一致，AI 应按本地规范工作）
+
+- **`structure-pro/rule/`**（01-project-structure / 03-crud-template 等）基于 **4 模块 + Manager 模式 + Entity 直接用 `@TableId`**。这是 **单体/老项目的合法本地规范**，与 DDD 新规范并存（见前文"项目形态与适用规范"）。AI 在 structure-pro 仓库工作时 **沿用其 `rule/` 目录的本地规范**，不强行套用 DDD 规则。
+- 本规则库已从 `structure-pro/rule` 吸收了仍通用的内容（CVE 修复、构建配置、`TenantContextHolder`、`DataRuleEngine.filter`、各 Starter 配置、validation、swagger），**内容已自包含在本仓库**，不依赖 structure-pro 仓库。
 
 ## 已识别的"包名不一致"案例（生成 import 前 MUST 核对目标类所在的具体 starter）
 

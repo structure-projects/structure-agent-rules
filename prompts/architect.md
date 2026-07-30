@@ -17,13 +17,29 @@
 
 ## 选型决策树（为下游业务项目选模板）
 
-| 诉求 | 推荐模板 |
-|---|---|
-| 单体 + 单模块 | `structure-mono-template` |
-| 单体 + 多模块（common/core/biz/boot/cloud） | `structure-multi-module-template`（⚠️ README 超前于代码，仓库仅 README） |
-| DDD 分层（7+1 模块） | `structure-ddd-template`（**已被 structure-user / structure-org 实际采用**） |
-| 云原生微服务（含 Kong/Istio/Nacos/可观测） | `structure-pro` |
-| 老项目改造（若依/宇道） | 先确认目标仓库是否仍在维护（多数 2024-09 停更，疑似弃用） |
+| 诉求 | 推荐模板 | 模块结构 | 持久化模式 |
+|---|---|---|---|
+| 单体 + 单模块 | `structure-mono-template` | 单模块 | Manager 或 MyBatis-Plus 原生 |
+| **单体 + 4 模块**（api/biz/common/dependencies） | `structure-multi-module-template` | 4 模块 | **Manager 模式**（`IManager extends IService`） |
+| **DDD 业务中心**（**新项目默认**） | `structure-ddd-template` | 7+1 模块 | **RepositoryFacade + Delegate + Entity/PO 分离** |
+| 云原生微服务（含 Kong/Istio/Nacos/可观测） | `structure-pro` | 按其 `rule/` 本地规范 | 按其 `rule/` 本地规范 |
+| 老项目改造（若依/宇道） | 先确认目标仓库是否仍在维护（多数 2024-09 停更，疑似弃用） | — | — |
+
+## 项目形态兼容（重要）
+
+生态内 **两种项目形态并存**，AI 必须先判断当前仓库属于哪种，再套用对应规范：
+
+| 形态 | 判断特征 | 适用规范 |
+|---|---|---|
+| **DDD 微服务** | 模块含 `domain` / `infra` / `repository-mybatis`；存在 `RepositoryFacade` / `Delegate` / `*MybatisPlusDelegate` | 本文件 DDD 章节全部规则 |
+| **单体应用** | 模块为 `api` / `biz` / `common` / `dependencies`；存在 `manager/` 包 + `IManager extends IService` | **本地规范**（`rule/` / `PROJECT_RULES.md`），不强行套用 DDD |
+
+**兼容原则**：
+
+- **新业务中心 MUST 用 DDD 7+1**；**单体项目 MAY 用 4 模块 + Manager 模式**，不强制迁移。
+- **老项目**（如 `structure-pro`）：沿用其本地 `rule/` 规范。跨形态通用规则（统一响应、统一异常、命名约定、validation、swagger、`UserContext`、数据权限、多租户）**两种形态都适用**。
+- 仅 DDD 适用的规则（RepositoryFacade / `toEntity`/`toPo` / `ICrudRepository` / Entity/PO 分离）**不要**在单体项目中套用。
+- 仅单体适用的规则（Manager 模式、Entity 直接用 `@TableId`/`@TableLogic`、Entity 兼做领域对象）**不要**在 DDD 项目中套用。
 
 ## DDD 真实模块布局（structure-user / structure-org 已验证）
 
