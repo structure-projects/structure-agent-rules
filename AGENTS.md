@@ -103,7 +103,7 @@
 
 ### 项目级安装（推荐）
 
-规则安装到目标项目的 `.structure-rules/` 和各 AI 工具的对应目录：
+规则安装到目标项目的 `prompts/` 和各 AI 工具的对应目录：
 
 ```bash
 ./install.sh -t ../my-project -s structure-boot,vue3 -w cursor,codebuddy,claude
@@ -112,13 +112,16 @@
 安装后目标项目结构：
 ```
 my-project/
-├── .structure-rules/prompts/  # 完整规则文件
-├── .cursor/rules/             # Cursor 自动加载
-├── .codebuddy/rules/          # CodeBuddy 自动加载
-├── .claude/agents/            # Claude Code Agents
-├── .trae/rules/               # Trae
-├── .lingma/rules/             # 通义灵码
-└── AGENTS.md                  # Codex 合并规则
+├── prompts/                    # 完整规则文件
+│   ├── structure-boot/         # 后端规则
+│   ├── vue3/                   # 前端规则
+│   └── _common/                # 通用规则（-c 选项）
+├── .cursor/rules/              # Cursor 自动加载
+├── .codebuddy/rules/           # CodeBuddy 自动加载
+├── .claude/agents/             # Claude Code Agents
+├── .trae/rules/                # Trae
+├── .lingma/rules/              # 通义灵码
+└── AGENTS.md                   # Codex 合并规则（-w codex）
 ```
 
 ### 冲突避免

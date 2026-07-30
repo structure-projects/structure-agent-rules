@@ -29,6 +29,9 @@ warn()    { print_color "$YELLOW" "[WARN] $1"; }
 error()   { print_color "$RED" "[ERROR] $1"; exit 1; }
 
 # ====== 扫描可用技术栈 ======
+# 栈目录只在 backend/ frontend/ cross-platform/ 三类根目录下，避免误匹配其他目录
+STACK_ROOTS=(backend frontend cross-platform)
+
 find_stack_path() {
   local name="$1"
   # 兼容用户输入 "java/structure-boot" 格式，提取实际的栈目录名
@@ -37,17 +40,13 @@ find_stack_path() {
     search_name="${name##*/}"
   fi
   local matches=()
-  while IFS= read -r -d '' dir; do
-    local dir_name
-    dir_name=$(basename "$dir")
-    if [[ "$dir_name" == "$search_name" ]]; then
+  local root
+  for root in "${STACK_ROOTS[@]}"; do
+    [ -d "$SCRIPT_DIR/$root" ] || continue
+    while IFS= read -r -d '' dir; do
       matches+=("$dir")
-    fi
-  done < <(find "$SCRIPT_DIR" -mindepth 1 -maxdepth 4 -type d -name "$search_name" \
-            -not -path "*/.git/*" -not -path "*/.claude/*" \
-            -not -path "*/prompts/*" -not -path "*/codex/*" -not -path "*/rules/*" \
-            -not -path "*/.trae/*" -not -path "*/.codebuddy/*" -not -path "*/.lingma/*" \
-            -not -path "*/_common/*" -print0)
+    done < <(find "$SCRIPT_DIR/$root" -mindepth 1 -maxdepth 3 -type d -name "$search_name" -print0)
+  done
 
   if [ "${#matches[@]}" -eq 0 ]; then
     return 1
@@ -71,10 +70,12 @@ list_all_stacks() {
   echo ""
   echo "--- 后端 ---"
   echo ""
-  for category in backend/*/; do
+  for category in "$SCRIPT_DIR"/backend/*/; do
+    [ -d "$category" ] || continue
     local lang
     lang=$(basename "$category")
     for stack in "$category"*/; do
+      [ -d "$stack" ] || continue
       local name
       name=$(basename "$stack")
       if [ -f "$stack/prompts/developer.md" ]; then
@@ -86,7 +87,8 @@ list_all_stacks() {
   done
   echo ""
   echo "--- 前端 ---"
-  for stack in frontend/*/; do
+  for stack in "$SCRIPT_DIR"/frontend/*/; do
+    [ -d "$stack" ] || continue
     local name
     name=$(basename "$stack")
     if [ -f "$stack/prompts/developer.md" ]; then
@@ -97,10 +99,12 @@ list_all_stacks() {
   done
   echo ""
   echo "--- 跨平台 ---"
-  for domain in cross-platform/*/; do
+  for domain in "$SCRIPT_DIR"/cross-platform/*/; do
+    [ -d "$domain" ] || continue
     local dom
     dom=$(basename "$domain")
     for stack in "$domain"*/; do
+      [ -d "$stack" ] || continue
       local name
       name=$(basename "$stack")
       if [ -f "$stack/prompts/developer.md" ]; then
@@ -128,19 +132,22 @@ install_common() {
     return
   fi
 
-  local common_dest="$TARGET/.structure-rules/prompts/_common"
+  local common_dest="$TARGET/prompts/_common"
   mkdir -p "$common_dest"
 
   local copied=0
+  COMMON_FILES=""
   for f in "$SCRIPT_DIR"/_common/*.md; do
     if [ -f "$f" ]; then
       cp "$f" "$common_dest/"
+      COMMON_FILES="${COMMON_FILES}${common_dest}/$(basename "$f") "
       copied=$((copied + 1))
     fi
   done
 
   if [ "$copied" -gt 0 ]; then
-    success "_common → $TARGET/.structure-rules/prompts/_common/ ($copied files)"
+    success "_common → prompts/_common/ ($copied files)"
+    _build_common_ref
   fi
 }
 
@@ -156,15 +163,18 @@ install_stack() {
   canonical_name=$(basename "$stack_path")
 
   local prompt_src="$stack_path/prompts"
-  local prompt_dest="$TARGET/.structure-rules/prompts/$canonical_name"
+  local prompt_dest="$TARGET/prompts/$canonical_name"
 
-  # 1. 拷贝 prompts/
+  # 1. 拷贝 prompts/（目录为空则不创建目标、不谎报成功）
   if [ -d "$prompt_src" ]; then
-    mkdir -p "$prompt_dest"
-    cp "$prompt_src"/*.md "$prompt_dest/" 2>/dev/null || true
-    local pcount
-    pcount=$(find "$prompt_dest" -name "*.md" | wc -l | tr -d ' ')
-    success "$canonical_name → .structure-rules/prompts/$canonical_name/ ($pcount prompts)"
+    local md_files=("$prompt_src"/*.md)
+    if [ -e "${md_files[0]}" ]; then
+      mkdir -p "$prompt_dest"
+      cp "${md_files[@]}" "$prompt_dest/"
+      success "$canonical_name → prompts/$canonical_name/ (${#md_files[@]} prompts)"
+    else
+      warn "$canonical_name 的 prompts/ 无 .md 文件，跳过"
+    fi
   else
     warn "$canonical_name 无 prompts/ 目录，跳过"
   fi
@@ -173,11 +183,13 @@ install_stack() {
   for tool in ${TOOLS//,/ }; do
     case "$tool" in
       all)
-        for t in claude cursor trae codebuddy lingma; do
+        for t in claude cursor trae codebuddy lingma codex; do
+          [ "$t" = "codex" ] && continue
           install_tool_wrappers "$canonical_name" "$stack_path" "$t"
         done
         break
         ;;
+      codex) ;;  # AGENTS.md 由 merge_codex 单独处理
       claude|cursor|trae|codebuddy|lingma)
         install_tool_wrappers "$canonical_name" "$stack_path" "$tool"
         ;;
@@ -213,24 +225,71 @@ _role_label() {
   esac
 }
 
+# 从 markdown 文件提取第一个 H1 标题
+_get_title() {
+  local file="$1"
+  sed -n 's/^# //p;q' "$file" 2>/dev/null || basename "$file" .md
+}
+
+# 从 mdc 文件名提取角色名。多段角色（ci-cd / project-scaffolding）必须整体匹配，
+# 不能用 ${fname##*-} 只取最后一段（会把 vue3-ci-cd 截成 cd）。
+KNOWN_ROLES=(project-scaffolding components validation developer architect reviewer tester ci-cd swagger)
+
+_extract_role() {
+  local fname="$1"
+  local r
+  for r in "${KNOWN_ROLES[@]}"; do
+    if [[ "$fname" == *"-$r" ]]; then
+      echo "$r"
+      return 0
+    fi
+  done
+  # 未知角色按原样返回（调用方负责处理）
+  echo "$fname"
+}
+
+# 根据已安装的 COMMON_FILES 构建引用段落文本，存入 COMMON_REF_TEXT
+_build_common_ref() {
+  if [ -z "${COMMON_FILES:-}" ]; then
+    COMMON_REF_TEXT=""
+    return
+  fi
+  local ref=""
+  ref="> **通用规范** (已安装于 \`prompts/_common/\`):"
+  ref="${ref}"$'\n'
+  local f fname title
+  for f in ${COMMON_FILES}; do
+    fname=$(basename "$f")
+    title=$(_get_title "$f")
+    ref="${ref}> - \`prompts/_common/${fname}\`: ${title}"
+    ref="${ref}"$'\n'
+  done
+  ref="${ref}> "$'\n'"> 在编码决策前应加载对应规范文件。"
+  COMMON_REF_TEXT="$ref"
+}
+
 convert_mdc() {
   local src="$1" out="$2" tool="$3" stack_name="$4"
 
   local fname role desc always body
   fname=$(basename "$src" .mdc)
-  # 去掉 {prefix}- 前缀，保留角色名
-  # 例如 structure-boot-developer → developer
-  # 如果前缀含多个连字符（如 spring-boot-developer），取最后一段
-  role="${fname##*-}"
+  role=$(_extract_role "$fname")
 
   # 提取 frontmatter 字段
   desc=$(awk '/^---$/ {c++; next} c==1 && /^description:/ {sub(/^description:[[:space:]]*/,""); print; exit}' "$src")
   always=$(awk '/^---$/ {c++; next} c==1 && /^alwaysApply:/ {sub(/^alwaysApply:[[:space:]]*/,""); print; exit}' "$src")
   always="${always:-false}"
 
-  # 提取正文（第二个 --- 之后的所有内容）。注意 $src 可能包含 '---' 的 sed 结束标记，
-  # 所以不用 sed range address，改用 awk 状态机
-  body=$(awk 'BEGIN{c=0} /^---$/ {c++; next} c>=2' "$src")
+  # 提取正文（第二个 --- 之后的所有内容），并把模板里的 prompts/X.md 重写为
+  # 安装后的实际路径 prompts/<stack>/X.md（业务项目根目录视角）
+  body=$(awk 'BEGIN{c=0} /^---$/ {c++; next} c>=2' "$src" \
+    | sed -E "s|prompts/([a-z][a-z-]*\.md)|prompts/${stack_name}/\1|g")
+
+  # 如果安装了 _common，在 wrapper body 头部注入引用段落
+  local common_ref=""
+  if [ -n "${COMMON_REF_TEXT:-}" ]; then
+    common_ref="${COMMON_REF_TEXT}"$'\n\n'
+  fi
 
   case "$tool" in
     codebuddy)
@@ -240,6 +299,7 @@ convert_mdc() {
         echo "description: $desc"
         echo "---"
         echo ""
+        [ -n "$common_ref" ] && echo "$common_ref"
         echo "$body"
       } > "$out"
       ;;
@@ -255,16 +315,18 @@ convert_mdc() {
         echo ""
         echo "你是 ${stack_name} 生态的${role_cn} Agent。"
         echo ""
-        echo "**首要动作**：在开始写代码前，先用 Read 加载 \`prompts/${role}.md\`；涉及具体组件用法时再读 \`prompts/components.md\`；新建项目时读 \`prompts/project-scaffolding.md\`。以下为操作要点："
+        [ -n "$common_ref" ] && echo "$common_ref"
+        echo "**首要动作**：在开始写代码前，先用 Read 加载 \`prompts/${stack_name}/${role}.md\`；涉及具体组件用法时再读 \`prompts/${stack_name}/components.md\`；新建项目时读 \`prompts/${stack_name}/project-scaffolding.md\`。以下为操作要点："
         echo ""
         echo "$body"
         echo ""
-        echo "完整规则以 \`prompts/${role}.md\` 为准。"
+        echo "完整规则以 \`prompts/${stack_name}/${role}.md\` 为准。"
       } > "$out"
       ;;
     trae|lingma)
       # 直接输出正文，不带 frontmatter
       {
+        [ -n "$common_ref" ] && echo "$common_ref"
         echo "$body"
       } > "$out"
       ;;
@@ -320,7 +382,23 @@ install_tool_wrappers() {
 
     if [ "$tool" = "cursor" ]; then
       # Cursor: 直接拷贝 .mdc，改名（保留 .mdc 扩展名）
-      cp "$f" "$fout"
+      # 若安装了 _common，在 frontmatter 闭合后（第二个 --- 之后）注入引用段落
+      if [ -n "${COMMON_REF_TEXT:-}" ]; then
+        {
+          local fc=0
+          while IFS= read -r line || [ -n "$line" ]; do
+            printf '%s\n' "$line"
+            if [[ "$line" == "---" ]]; then
+              fc=$((fc + 1))
+              if [ $fc -eq 2 ]; then
+                printf '\n%s\n\n' "$COMMON_REF_TEXT"
+              fi
+            fi
+          done < "$f"
+        } > "$fout"
+      else
+        cp "$f" "$fout"
+      fi
     else
       # 其他工具: 从 .mdc 转换
       convert_mdc "$f" "$fout" "$tool" "$name"
@@ -329,7 +407,8 @@ install_tool_wrappers() {
   done
 
   if [ "$count" -gt 0 ]; then
-    success "$name → .${tool}/ ($count wrappers)"
+    local rel_dir="${dest_dir#$TARGET/}"
+    success "$name → $rel_dir/ ($count wrappers)"
   fi
 }
 
@@ -400,27 +479,72 @@ validate_stacks() {
   return 0
 }
 merge_codex() {
+  # 只在用户选了 codex 或 all 时才生成
+  local wants_codex=false
+  local t
+  for t in ${TOOLS//,/ }; do
+    case "$t" in codex|all) wants_codex=true; break ;; esac
+  done
+  if [ "$wants_codex" != true ]; then
+    info "未选择 codex，跳过 AGENTS.md 生成"
+    return
+  fi
+
   local out="$TARGET/AGENTS.md"
-  echo "# AGENTS.md — 全栈项目 AI 规则" > "$out"
-  echo "" >> "$out"
-  echo "> 由 structure-agent-rules install.sh 自动生成。" >> "$out"
-  echo "> 安装的技术栈: ${STACKS}" >> "$out"
-  echo "" >> "$out"
+
+  # 覆盖保护：目标已存在 AGENTS.md 时备份并警告
+  if [ -f "$out" ]; then
+    local bak="${out}.bak.$(date +%Y%m%d%H%M%S)"
+    cp "$out" "$bak"
+    warn "目标已存在 AGENTS.md，已备份到 ${bak##*/}"
+  fi
+
+  # 单 H1 头部
+  {
+    echo "# AGENTS.md — 全栈项目 AI 规则"
+    echo ""
+    echo "> 由 structure-agent-rules install.sh 自动生成。"
+    echo "> 安装的技术栈: ${STACKS}"
+    echo ""
+  } > "$out"
 
   for name in ${STACKS//,/ }; do
+    name="${name## }"; name="${name%% }"
+    [ -z "$name" ] && continue
     local stack_path codex_src canonical_name
     stack_path=$(find_stack_path "$name") || continue
     canonical_name=$(basename "$stack_path")
     codex_src="$stack_path/codex/AGENTS.md"
     if [ -f "$codex_src" ]; then
-      echo "## $canonical_name" >> "$out"
-      echo "" >> "$out"
-      cat "$codex_src" >> "$out"
-      echo "" >> "$out"
+      # 读取 codex 内容：跳过第一行 H1，其余输出，同时修正 prompts/ 路径
+      {
+        echo "## $canonical_name"
+        echo ""
+        tail -n +2 "$codex_src" \
+          | sed -E "s|prompts/([a-z][a-z-]*\.md)|prompts/${canonical_name}/\1|g"
+        echo ""
+      } >> "$out"
     fi
   done
 
-  success "AGENTS.md 已合并生成"
+  # 如果安装了 _common，追加清单章节（仅文件名 + 路径指向，不 cat 全内容）
+  if [ -n "${COMMON_FILES:-}" ]; then
+    {
+      echo "## _common"
+      echo ""
+      echo "通用规范已安装于 \`prompts/_common/\`，在编码决策前应加载对应文件："
+      echo ""
+      local f fname title
+      for f in ${COMMON_FILES}; do
+        fname=$(basename "$f")
+        title=$(_get_title "$f")
+        echo "- \`prompts/_common/${fname}\`: ${title}"
+      done
+      echo ""
+    } >> "$out"
+  fi
+
+  success "AGENTS.md → $TARGET/AGENTS.md"
 }
 
 # ====== 参数解析 ======
@@ -450,7 +574,7 @@ interactive_mode() {
   echo ""
   echo "======================== setup-projects 规则安装 ========================"
   echo ""
-  echo "本脚本将规则安装到目标项目的 .structure-rules/ 和对应 AI 工具目录。"
+  echo "本脚本将规则安装到目标项目的 prompts/ 和对应 AI 工具目录。"
   echo ""
 
   # 目标路径
@@ -460,46 +584,45 @@ interactive_mode() {
     error "目标路径不能为空"
   fi
 
-  # 选择后端
+  # 选择技术栈（统一展示，按类别分组，一次选择）
   echo ""
-  echo "选择后端技术栈（多选用逗号分隔，直接回车跳过）:"
-  for category in backend/*/; do
-    local lang
-    lang=$(basename "$category")
-    for stack in "$category"*/; do
-      local name
-      name=$(basename "$stack")
-      if [ -f "$stack/prompts/developer.md" ]; then
-        echo "  $name  [$lang]"
-      else
-        echo "  $name  [$lang, 占位]"
-      fi
-    done
-  done
-  read -r -p "后端 (输入栈名, 逗号分隔, 直接回车跳过): " BE_STACKS
+  echo "选择技术栈（多选用逗号分隔，直接回车跳过）:"
 
-  # 选择前端
-  echo ""
-  echo "选择前端技术栈（多选用逗号分隔，直接回车跳过）:"
-  for stack in frontend/*/; do
-    local name
-    name=$(basename "$stack")
-    if [ -f "$stack/prompts/developer.md" ]; then
-      echo "  $name [内容]"
-    else
-      echo "  $name [占位]"
-    fi
-  done
-  read -r -p "前端 (逗号分隔): " FE_STACKS
+  # 自动发现 stack：扫描所有 prompts/developer.md，提取栈目录路径
+  # 路径模式：
+  #   backend/<lang>/<stack>/prompts/developer.md         → 后端 <lang>
+  #   frontend/<framework>/prompts/developer.md           → 前端 <framework>
+  #   cross-platform/<platform>/<stack>/prompts/developer.md → 跨平台 <platform>
+  while IFS= read -r dev_file; do
+    [ -z "$dev_file" ] && continue
+    # stack_dir = dev_file 的父目录的父目录
+    stack_dir=$(dirname "$(dirname "$dev_file")")
+    stack_name=$(basename "$stack_dir")
+    rel="${stack_dir#"$SCRIPT_DIR"/}"
+    root_name=$(echo "$rel" | awk -F/ '{print $1}')
+    middle_name=$(echo "$rel" | awk -F/ '{print $2}')
+    case "$root_name" in
+      backend)
+        group_label="后端 $middle_name"
+        ;;
+      frontend)
+        group_label="前端 $middle_name"
+        ;;
+      cross-platform)
+        case "$middle_name" in
+          mobile)  group_label="跨平台 移动" ;;
+          desktop) group_label="跨平台 桌面" ;;
+          miniapp) group_label="跨平台 小程序" ;;
+          native)  group_label="跨平台 原生" ;;
+          *)       group_label="跨平台 $middle_name" ;;
+        esac
+        ;;
+      *) group_label="$root_name/$middle_name" ;;
+    esac
+    printf "  [%-15s] %s\n" "$group_label" "$stack_name"
+  done < <(find "$SCRIPT_DIR" -path '*/prompts/developer.md' -not -path '*/_common/*' 2>/dev/null | sort)
 
-  # 合并
-  if [ -n "$BE_STACKS" ] && [ -n "$FE_STACKS" ]; then
-    STACKS="$BE_STACKS,$FE_STACKS"
-  elif [ -n "$BE_STACKS" ]; then
-    STACKS="$BE_STACKS"
-  elif [ -n "$FE_STACKS" ]; then
-    STACKS="$FE_STACKS"
-  fi
+  read -r -p "技术栈 (逗号分隔): " STACKS
 
   if [ -z "$STACKS" ]; then
     error "至少选择一个技术栈"
@@ -596,8 +719,10 @@ main() {
   # 安装前验证：栈存在性、同名歧义、输出文件名唯一性
   validate_stacks
 
-  # 创建必要目录
-  mkdir -p "$TARGET/.structure-rules/prompts"
+  # 安装通用规则（必须在栈之前，这样 convert_mdc 能注入 _common 引用）
+  if [ "$INSTALL_COMMON" = true ]; then
+    install_common
+  fi
 
   # 安装每个规则栈
   for name in ${STACKS//,/ }; do
@@ -606,11 +731,6 @@ main() {
     install_stack "$name"
   done
 
-  # 安装通用规则
-  if [ "$INSTALL_COMMON" = true ]; then
-    install_common
-  fi
-
   # 合并 Codex
   merge_codex
 
@@ -618,13 +738,24 @@ main() {
   echo "==================== 安装完成 ===================="
   echo ""
   echo "📦 已安装到 $TARGET/"
-  echo "   prompts: .structure-rules/prompts/"
-  echo "   cursor:  .cursor/rules/"
-  echo "   codebuddy:.codebuddy/rules/"
-  echo "   claude:  .claude/agents/"
-  echo "   trae:    .trae/rules/"
-  echo "   lingma:  .lingma/rules/"
-  echo "   codex:   AGENTS.md"
+  echo "   prompts:    prompts/"
+
+  # 动态列出实际选择的工具路径（而非全部）
+  local _t _sc=false _sb=false _scl=false _st=false _sl=false _sx=false
+  for _t in ${TOOLS//,/ }; do
+    case "$_t" in
+      all) _sc=true; _sb=true; _scl=true; _st=true; _sl=true; _sx=true; break ;;
+      cursor) _sc=true ;; codebuddy) _sb=true ;; claude) _scl=true ;;
+      trae) _st=true ;; lingma) _sl=true ;; codex) _sx=true ;;
+    esac
+  done
+  [ "$_sc" = true ]  && echo "   cursor:     .cursor/rules/"
+  [ "$_sb" = true ]  && echo "   codebuddy:  .codebuddy/rules/"
+  [ "$_scl" = true ] && echo "   claude:     .claude/agents/"
+  [ "$_st" = true ]  && echo "   trae:       .trae/rules/"
+  [ "$_sl" = true ]  && echo "   lingma:     .lingma/rules/"
+  [ "$_sx" = true ]  && echo "   codex:      AGENTS.md"
+  [ "$INSTALL_COMMON" = true ] && echo "   common:     prompts/_common/"
   echo ""
 }
 
