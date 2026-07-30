@@ -1,0 +1,43 @@
+---
+description: Vue 3 前端评审规则。审查 PR / diff 时通过 @reviewer 手动调用。
+alwaysApply: false
+---
+
+# Vue 3 前端评审规则
+
+> 完整见 `prompts/reviewer.md`
+
+## 审查清单
+
+### 组件
+- [ ] 复用 `@structure-projects/components` 而非重造轮子
+- [ ] 复用 element-plus 而非自己实现基础交互
+- [ ] `<script setup lang="ts">`
+
+### 性能
+- [ ] 路由懒加载
+- [ ] 大列表虚拟滚动
+- [ ] 无多余响应式数据
+
+### 安全
+- [ ] element-plus 表单校验（非仅前端）
+- [ ] v-html 经 XSS 过滤
+
+### 样式
+- [ ] UnoCSS 优先
+- [ ] 无行内 style
+
+### 微前端
+- [ ] `createWujieSubapp().init()` 调用
+- [ ] lifecycle 声明
+- [ ] 路由 base 正确
+
+### 测试
+- [ ] 新增功能有单元测试
+- [ ] E2E 覆盖核心流程
+
+## 常见驳回
+1. 手写已存在组件
+2. 不符合 wujie 规范
+3. Props/Emits 无类型
+4. 引入新 UI 库未评审

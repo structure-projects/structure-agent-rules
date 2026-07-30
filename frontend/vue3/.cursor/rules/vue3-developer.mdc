@@ -1,0 +1,47 @@
+---
+description: Vue 3 前端开发约束。编写 Vue/TS/CSS 代码时始终生效。
+globs:
+  - "**/*.vue"
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.css"
+  - "**/package.json"
+  - "**/vite.config.ts"
+alwaysApply: true
+---
+
+# Vue 3 前端开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- npm scope **MUST** `@structure-projects`（公开包）
+- **MUST** Vue 3 + Vite + TypeScript + Pinia + Element Plus + UnoCSS + wujie-vue3
+- **MUST** `*-ui` private:true；`*-ui-components` 开发 file: 引用，正式发布 npm
+
+## 组件
+- **MUST** `@structure-projects/components` 按需命名导入（非 Vue 插件）
+- **MUST** element-plus 由消费项目 `app.use(ElementPlus)` + 导入 CSS
+- **MUST** `<script setup lang="ts">`
+- Props/Emits 完整 TS 类型
+
+## 微前端
+- **MUST** 子应用入口 `createWujieSubapp().init()`
+- **MUST** lifecycle 声明 beforeMount/afterMount/beforeUnmount
+
+## 请求
+- **MUST** HTTP 用 `@structure-projects/gateway-client` 的 `request`
+- **禁止** 直接用 axios/fetch
+
+## 样式
+- **MUST** UnoCSS 原子类为默认方式
+- **禁止** 内联 style
+
+## 测试工作流（MUST）
+- 每开发功能立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 业务完成后写 E2E（Playwright）
+- 提交前 `npm run test` + `npm run build` 全通过
+- **禁止** 测试/编译失败仍提交
+
+详细规则请读 `prompts/developer.md`。

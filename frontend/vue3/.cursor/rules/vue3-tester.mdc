@@ -1,0 +1,31 @@
+---
+description: Vue 3 前端测试规则。编写测试代码时触发。
+globs:
+  - "**/*.test.ts"
+  - "**/*.spec.ts"
+  - "**/e2e/**"
+  - "**/vitest.config.ts"
+alwaysApply: false
+---
+
+# Vue 3 前端测试规则
+
+> 完整见 `prompts/tester.md`
+
+## 测试分层
+| 层 | 工具 |
+|---|---|
+| 单元测试 | Vitest |
+| 组件测试 | Vitest + Vue Test Utils |
+| E2E | Playwright |
+
+## 测试工作流（MUST）
+- 每功能开发后立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 业务完成后写 E2E（Playwright）
+- 提交前 `npm run test` + `npm run build` 全通过
+- **禁止** 测试/编译失败仍提交
+
+## 命名
+- 单元测试：`{target}.test.ts`
+- E2E：`{feature}.spec.ts`

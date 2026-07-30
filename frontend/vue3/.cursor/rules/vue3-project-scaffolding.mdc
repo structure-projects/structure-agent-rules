@@ -1,0 +1,22 @@
+---
+description: Vue 3 前端项目脚手架规则。创建新前端项目/模块时触发。
+globs:
+  - "**/package.json"
+  - "**/vite.config.ts"
+alwaysApply: false
+---
+
+# Vue 3 前端脚手架规则
+
+> 完整见 `prompts/project-scaffolding.md`
+
+## 子应用（*-ui）
+- 路径：`structure-{X}/structure-{X}-ui/`
+- package.json name `@structure-projects/{领域}-ui`，`private: true`
+- 技术栈：Vue3 + Vite + TS + Pinia + Element Plus + UnoCSS + wujie-vue3
+- main.ts 调用 `createWujieSubapp().init()`
+
+## 组件库（*-ui-components）
+- 路径：`structure-{X}/structure-{X}-ui-components/`
+- 开发时 `file:` 引用，发布时 npm (`@structure-projects/{领域}-ui-components`)
+- exports 声明正确，Element Plus external

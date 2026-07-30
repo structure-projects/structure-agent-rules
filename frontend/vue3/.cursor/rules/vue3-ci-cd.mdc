@@ -1,0 +1,30 @@
+---
+description: Vue 3 前端 CI/CD 规则。涉及 GitHub Actions 流水线配置时触发。
+globs:
+  - "**/.github/workflows/**"
+  - "**/Dockerfile"
+alwaysApply: false
+---
+
+# Vue 3 前端 CI/CD 规则
+
+> 完整见 `prompts/ci-cd.md`
+
+## 标准 Workflow
+| 文件 | 用途 |
+|---|---|
+| `test.yml` | npm ci + vitest + vue-tsc |
+| `build-and-push.yml` | Docker nginx 构建推送（*-ui） |
+| `publish.yml` | npm publish（仅 *-ui-components） |
+
+## 关键约束
+- **MUST** 版本号从 release tag 提取
+- **MUST** @structure-projects scope，--access public
+- **MUST** Secrets: NPM_TOKEN
+- ⚠️ *-ui（private: true）不发布 npm
+
+## Dockerfile
+```dockerfile
+FROM nginx:1.27-alpine
+COPY dist /usr/share/nginx/html
+```

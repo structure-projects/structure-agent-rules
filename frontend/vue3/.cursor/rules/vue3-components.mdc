@@ -1,0 +1,26 @@
+---
+description: Vue 3 组件使用规范。涉及 @structure-projects/components、element-plus、gateway-client、wujie-subapp 时触发。
+globs:
+  - "**/*.vue"
+  - "**/package.json"
+alwaysApply: false
+---
+
+# Vue 3 组件使用规范
+
+> 完整见 `prompts/components.md`
+
+## `@structure-projects/components`
+- **MUST** 按需命名导入（非 Vue 插件）
+- element-plus external，消费项目自注册
+
+## `@structure-projects/gateway-client`
+- `request.get/post/put/delete` 自动带网关 Header
+- 错误自动 el-message 提示
+
+## `@structure-projects/wujie-subapp`
+- `createWujieSubapp().init()` 子应用入口
+
+## 自定义组件
+- L2 领域组件在 `*-ui-components` 维护
+- 开发时 `file:` 引用，发布时 npm

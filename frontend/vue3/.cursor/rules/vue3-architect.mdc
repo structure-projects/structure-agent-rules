@@ -1,0 +1,35 @@
+---
+description: Vue 3 前端架构规则。涉及选型、微前端、组件分层、状态管理时触发。
+globs:
+  - "**/vite.config.ts"
+  - "**/router/**"
+  - "**/stores/**"
+  - "**/App.vue"
+  - "**/main.ts"
+alwaysApply: false
+---
+
+# Vue 3 前端架构规则
+
+> 完整见 `prompts/architect.md`
+
+## 微前端
+- **MUST** wujie（无界），`structure-portal` 为基座
+- **MUST** `structure-portal` 基座负责路由分发与统一鉴权
+- **MUST** 子应用入口 `createWujieSubapp().init()`
+- 子应用 lifecycle：beforeMount/afterMount/beforeUnmount
+
+## 组件分层
+| 层 | 定位 | npm |
+|---|---|---|
+| L1 | `@structure-projects/components` | 发布 |
+| L2 | `*-ui-components` | 开发 file: 引用 |
+| L3 | 页面组件 | 内部 |
+
+## 状态管理
+- Pinia Setup Store 语法
+- 按领域拆分 stores/
+
+## 构建
+- Vite + TypeScript strict
+- unplugin-auto-import + unplugin-vue-components

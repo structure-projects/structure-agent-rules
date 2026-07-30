@@ -1,0 +1,74 @@
+---
+description: structure-projects 生态开发约束。编写 Java/前端代码时始终生效。
+globs:
+  - "**/*.java"
+  - "**/*.kt"
+  - "**/pom.xml"
+alwaysApply: true
+---
+
+# structure-projects 开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；DTO 校验见 `prompts/validation.md`；API 文档见 `prompts/swagger.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- Maven `groupId` = `cn.structured`
+- 包名：`cn.structure.*`（无 d）仅用于 `structure-common` / `structure-infra`；其余全部 `cn.structured.*`（含 `structure-security`）
+- Spring Boot `4.0.6` + JDK 17 + `jakarta.*`；parent `cn.structured:structure-dependencies:1.4.4`
+
+## 关键优先级（顺序不可乱）
+- **工具类**：Hutool → 框架 `structure-common` → 框架其他 → 自定义（**限 infra 层**）
+- **Bean 注入**：构造器（推荐 Lombok `@RequiredArgsConstructor`）→ `@Resource` → `@Autowired`（谨慎）
+
+## 持久化
+- `RepositoryImpl extends RepositoryFacade<Entity, ID, Delegate>`，方法体 `getDelegate().xxx()`
+- `MybatisPlusDelegate extends MybatisPlusRepositoryDelegate<Entity, PO, ID>`，**MUST 显式重写 `toEntity`/`toPo`**
+- 仓储接口优先用框架已定义函数（`ICrudRepository` 等）
+- **禁止** 在 `Service`/`Controller` 注入 `Mapper`/`PO`
+
+## POJO
+- 实体 MUST 有 `@Builder`
+- 所有 POJO MUST 有无参构造
+- 函数参数 ≤ 3，超过用 包装类/值对象/命令对象
+
+## 异常与响应
+- 业务异常 MUST 有 `{X}ExceptionEnum` + 抛 `CommonException`
+- 控制层 MUST 用 `ResultUtilSimpleImpl.fail(...)`，**不抛异常**
+- Controller 返回 `ResResultVO<T>`；分页 `ReqPage` + `ResPage<T>`
+
+## API 出入参
+- DTO/VO/Query，兼容 CQRS
+- 分页签名统一：`page({X}Query query, ReqPage reqPage)`
+- CRUD 命名统一：`create`/`update`/`delete`/`findById`/`page`
+
+## 用户上下文与数据权限
+- 控制层：`SecurityUtils` 或 `UserContext` 均可
+- **非控制层 MUST 用 `cn.structured.security.context.UserContext` 静态方法**（`getLongUserId()` / `get()` 等），无需注入。⚠️ `UserContext` 在 `cn.structured.security.context.*`（security-core），**不是** `cn.structured.starter.context.*`
+- 优先用 `getLongUserId()` 等 Long 型方法，避免手写 `Long.parseLong(...)`
+- 消息事件 MUST 经 `DataScopeStreamBridge`（经 `EventManager` + `MESSAGE_EVENT` 自动路由）
+- 缓存 MUST 用 `DataScopeCacheManager`；Redis MUST 用 `DataScopeRedisTemplate`；**禁止**直接用原生 `CacheManager` / `RedisTemplate`
+
+## 事件
+- **发布**：实现 `cn.structure.infra.event.Event` + `EventManager.publish(event)`；跨服务 MUST `MESSAGE_EVENT`（走 `DataScopeStreamBridge` 数据权限包装）
+- **消费**：
+  - Spring 事件（本 JVM）：`@EventListener` / `@TransactionalEventListener`
+  - Binding 模型（跨服务推荐）：`Consumer<Message<T>>` Bean 名 = `@StreamEventListener.bindingName`；`Consumer` 内只 `dispatch(...)`；多状态用 `condition` SpEL（`#event.xxx`）
+  - Router 模型：`StreamEvent<T>` 信封 + `@StreamRouteHandler(eventType, businessType, condition)`，签名 `(T payload, StreamEvent<T> event)` 双参
+
+## 多租户
+- 租户标识从上下文取；**禁止** 从请求参数/Header 读；**禁止** SQL 手写 `WHERE tenant_id = ?`
+
+## 远程调用与 JSON
+- **MUST** 服务间调用用 `@FeignClient`（**禁止** `RestTemplate`/`WebClient`/手写 HTTP）；优先 Spring Cloud Alibaba（Nacos/Sentinel/Seata）
+- **MUST** 每个 `@FeignClient` 声明 `fallback`/`fallbackFactory`
+- **MUST** 强一致性场景 fallback 抛 `CommonException` 中断业务（**禁止** 静默兜底）
+- **MUST** JSON 用 FastJSON（`JSON.toJSONString`/`JSON.parseObject`）；**禁止** 混用 Jackson/Gson
+
+## 测试工作流（MUST）
+- 每开发一个功能 **立即** 写单元测试，**单测通过才能做下一个功能**
+- 功能有修改时 **同步修改测试** 并通过
+- 业务完成后写 **业务流程集成测试**（`XxxIT`），通过才算交付
+- **提交前**：本地 `mvn clean test` 全部通过 + `mvn clean package -DskipTests` 编译通过
+- **禁止** 测试/编译失败仍提交
+
+详细规则（含提交前自检清单）请读 `prompts/developer.md`。

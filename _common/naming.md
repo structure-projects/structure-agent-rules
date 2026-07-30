@@ -1,0 +1,52 @@
+# 通用命名规范
+
+> 通用规则，适用范围：所有技术栈和项目类型。
+
+## 目录与文件
+
+- **MUST** 目录名使用小写 + 连字符（kebab-case）：`user-management/`、`order-service/`。
+- **MUST** 文件名反映其用途与内容，见名知意。
+- **MUST** 配置文件按环境分离：`application.yml`（公共） + `application-{profile}.yml`（环境专用）。
+- **SHOULD** 避免过深的目录嵌套，一般不超过 4 层。
+
+## 代码命名
+
+### 通用原则
+
+- **MUST** 使用描述性命名，反映变量、函数、类的用途与含义。
+- **MUST** 遵循项目既有的命名风格，**禁止**在同一项目中混用多种风格。
+- **MUST** 命名长度与作用域成正比：全局符号详细描述，局部变量可简写。
+- **SHOULD** 布尔变量以 `is` / `has` / `can` / `should` 开头。
+- **SHOULD** 集合类型变量使用复数或集合后缀（`users`、`userList`、`userMap`）。
+
+### 语言特定
+
+| 语言 | 类/接口 | 函数/方法 | 变量 | 常量 |
+|------|---------|-----------|------|------|
+| **Java** | PascalCase (`UserService`) | camelCase (`findById`) | camelCase (`userId`) | UPPER_SNAKE (`MAX_RETRY`) |
+| **TypeScript/JavaScript** | PascalCase (`UserCard`) | camelCase (`fetchUser`) | camelCase (`userName`) | UPPER_SNAKE (`API_BASE_URL`) |
+| **Python** | PascalCase (`UserModel`) | snake_case (`get_user`) | snake_case (`user_id`) | UPPER_SNAKE (`MAX_CONNECTIONS`) |
+| **Go** | PascalCase (导出) / camelCase (私有) | PascalCase/camelCase | camelCase | PascalCase (导出常量) |
+| **Rust** | PascalCase (类型) / snake_case (变量) | snake_case | snake_case | UPPER_SNAKE (`MAX_SIZE`) |
+
+## API 与接口命名
+
+- **MUST** RESTful 资源 URL 使用名词复数 + kebab-case：`/api/users`、`/api/order-items`。
+- **MUST** 版本控制使用路径前缀（`/api/v1/users`）或请求头（`API-Version: v1`），项目内统一选择一种。
+- **MUST** 同一操作在不同 Controller / 模块内命名**必须统一**，不允许一处 `list`、一处 `page`、一处 `queryPage`。
+- **SHOULD** 标准 CRUD 操作使用固定动词（RESTful 映射见 [`api-design.md`](api-design.md)）。
+
+## 数据库命名
+
+- **MUST** 表名小写 + 下划线（snake_case）：`user_info`、`order_detail`。
+- **MUST** 主键统一命名为 `id`。
+- **MUST** 外键命名：`{关联表名}_id`（如 `user_id`、`order_id`）。
+- **SHOULD** 索引命名：`idx_{表名}_{字段}`（如 `idx_user_email`）；唯一索引 `uk_{表名}_{字段}`。
+- **SHOULD** 时间字段：创建时间 `created_at`，更新时间 `updated_at`。
+
+## 禁止事项
+
+- **禁止** 拼音命名或中英混用。
+- **禁止** 单字母变量（循环变量 `i`/`j`/`k` 除外）。
+- **禁止** 缩写歧义命名（如 `acc` 可能是 account / access / accumulate）。
+- **禁止** 否定式布尔变量（如 `isNotEnabled`）—— 一律用肯定式（`isEnabled`）。
