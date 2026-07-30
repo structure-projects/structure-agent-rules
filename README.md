@@ -261,6 +261,9 @@ Codex 启动时自动加载 `./AGENTS.md`（项目级），叠加 `~/.codex/AGEN
 | 新建项目 / 新模块 | `prompts/project-scaffolding.md` + `prompts/architect.md` |
 | 写业务代码 | `prompts/developer.md` |
 | 查某组件怎么用（security / datascope / gateway / wujie 等） | `prompts/components.md` |
+| 写 DTO 参数校验（分组验证、级联、自定义注解） | `prompts/validation.md` |
+| 写 API 文档（springdoc-openapi） | `prompts/swagger.md` |
+| 配 GitHub 流水线 / 发布（ACR / Maven Central / npm） | `prompts/ci-cd.md` |
 | 写测试 | `prompts/tester.md` |
 | PR 评审 / 设计评审 | `prompts/reviewer.md` |
 | 查生态事实（版本、包名、组件清单、已知不一致） | `CLAUDE.md` |

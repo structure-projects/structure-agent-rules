@@ -86,9 +86,18 @@ structure-{X}/
 - [ ] `README.md`：项目定位、技术栈、模块说明、快速开始、配置说明（**与代码同步**，不写超前于代码的内容）
 - [ ] 父 POM + 各模块 POM
 - [ ] 至少一个端到端示例（Entity → Repository → Service → Controller → 单测），作为后续开发参考
+- [ ] **单元测试（`XxxTest`）与集成测试（`XxxIT`，Testcontainers）各至少一个**，且 `mvn clean test` 通过
 - [ ] Flyway 迁移脚本目录与初始 `V1.0.0__CREATE_TABLE.sql`
+- [ ] **4 个 GitHub workflow**：`.github/workflows/test.yml` / `build-and-push.yml` / `release.yml` / `publish.yml`（模板见 [`ci-cd.md`](ci-cd.md)）
+- [ ] **`scripts/` 脚本**：`mavenbuild.sh` / `install.sh` / `dockerbuild.sh` / `release.sh` / `update-snapshots.sh`（见 [`ci-cd.md`](ci-cd.md) 第 3 节）
+- [ ] **`structure-{X}-boot/Dockerfile` + `liveness.sh` + `.dockerignore`**（见 [`ci-cd.md`](ci-cd.md) 第 4 节）
 - [ ] `.gitignore`（Java / Node / IDE）
 - [ ] `application.yaml` + `application-dev.yml` 模板
+
+**禁止包含**：
+
+- **示例工程**（`*-sample` / `*-example`）—— 正式项目 **不保留示例工程**；如需示例，放独立的 `structure-{X}-sample` 仓库或在 `structure-infra-sample` 等集中示例仓库维护。
+- 硬编码的密码 / 密钥 / Token（凭据一律走 GitHub Secrets，见 [`ci-cd.md`](ci-cd.md) 第 5 节）。
 
 ## 6. 前端子项目（如创建）
 

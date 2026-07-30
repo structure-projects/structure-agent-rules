@@ -38,7 +38,7 @@
 - `structure-admin` / `structure-admin-ui`（管理后台）
 - `structure-web-ui`（基础前端框架）
 
-注：`structure-tenant`（多租户）已在下文补充（取自 structure-pro/rule 验证过的配置）。
+注：`structure-tenant`（多租户）已在下文补充。
 
 ---
 
@@ -429,7 +429,7 @@ boolean send(String bindingName, String binderType, Object data, MimeType output
 | redis | `RedisDataRuleEngine` |
 | mybatis-plus | `MySqlDataRuleEngine` |
 
-### ✅ `DataRuleEngine.filter()` —— 编程式列级权限过滤（来自 structure-pro/rule 验证）
+### ✅ `DataRuleEngine.filter()` —— 编程式列级权限过滤
 
 ```java
 @Service
@@ -1129,7 +1129,7 @@ const actions = [
 
 **包**：`cn.structured.tenant.*`（**有 d**，推断 —— 待验证）
 
-### ✅ 租户上下文（来自 structure-pro/rule 验证）
+### ✅ 租户上下文
 
 **核心类**：`TenantContextHolder`（全限定名待读源码确认，疑似 `cn.structured.tenant.context.TenantContextHolder`）
 

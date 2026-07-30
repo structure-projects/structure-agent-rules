@@ -13,7 +13,7 @@ alwaysApply: true
 
 # structure-projects 开发规则
 
-完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`。以下为关键内联规则：
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；DTO 校验见 `prompts/validation.md`；API 文档见 `prompts/swagger.md`；流水线与发布见 `prompts/ci-cd.md`。以下为关键内联规则：
 
 ## 硬约束
 - Maven `groupId` = `cn.structured`；npm scope = `@structure-projects`

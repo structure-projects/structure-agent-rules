@@ -1,6 +1,6 @@
 # Developer — structure-projects 开发规则速查
 
-> 完整规则见 `prompts/developer.md`；组件用法见 `prompts/components.md`。本文件为 Trae IDE 速查版。
+> 完整规则见 `prompts/developer.md`；组件用法见 `prompts/components.md`；DTO 校验见 `prompts/validation.md`；API 文档见 `prompts/swagger.md`；流水线见 `prompts/ci-cd.md`。本文件为 Trae IDE 速查版。
 
 ## 硬约束
 

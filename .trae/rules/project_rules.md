@@ -14,6 +14,9 @@
 - `prompts/reviewer.md` — 评审任务
 - `prompts/components.md` — 查具体组件用法
 - `prompts/project-scaffolding.md` — 新建项目/模块
+- `prompts/validation.md` — DTO 参数校验（分组验证、级联、自定义注解）
+- `prompts/swagger.md` — API 文档（springdoc-openapi 注解与配置）
+- `prompts/ci-cd.md` — 测试要求、GitHub 流水线、发布（ACR / Maven Central / npm）
 
 按任务角色选择 `prompts/<role>.md`，也可参考 `.trae/rules/<role>.md` 的速查版。
 

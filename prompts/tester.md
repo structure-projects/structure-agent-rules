@@ -9,6 +9,13 @@
 - 集成测试 `XxxIT`：覆盖 `infra` / `interfaces` 层，**必须** 使用真实中间件（Testcontainers / 嵌入式实例），**禁止** 用 Mock 替代数据库、Redis、MQ。
 - 契约测试：跨服务 Feign 调用 **MUST** 有契约测试，避免提供方/消费方字段漂移。
 
+## 项目级测试要求（所有项目 MUST）
+
+- **MUST** 每个正式项目都同时具备 **单元测试** 与 **集成测试**（不允许只有其一）。
+- **MUST** `mvn clean test` 在 CI 环境可通过（不允许"本地能跑、CI 跑不过"）。
+- **MUST** 测试流水线 `.github/workflows/test.yml` 配置 push / PR 触发（模板见 [`ci-cd.md`](ci-cd.md) 第 2.1 节）。
+- **禁止** 在正式项目中保留示例工程（`*-sample` / `*-example`）作为"测试替代品"。
+
 ## 分层测试重点
 
 | 层 | 测什么 | 不测什么 |

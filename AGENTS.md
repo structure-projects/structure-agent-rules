@@ -24,6 +24,7 @@
 | **组件使用与配置** | [`prompts/components.md`](prompts/components.md) | 各组件（structure-common / infra / security / tenant / datascope / gateway / boot / cloud）的 API、配置项、典型用法 |
 | **参数验证规范** | [`prompts/validation.md`](prompts/validation.md) | DTO 校验、分组验证（`ValidationGroups.Add/Update`）、级联 `@Valid`、自定义注解、全局异常处理 |
 | **OpenAPI 文档规范** | [`prompts/swagger.md`](prompts/swagger.md) | springdoc-openapi 依赖、注解（`@Tag` / `@Operation` / `@Schema`）、`OpenApiConfig`、分组配置 |
+| **CI/CD 与发布** | [`prompts/ci-cd.md`](prompts/ci-cd.md) | 测试要求、4 个标准 GitHub workflow（test / build-and-push / release / publish）、scripts 规范、Dockerfile、ACR / Maven Central / npm 发布、Secrets 管理、发布排除示例工程 |
 
 ### 自包含模板（独立使用，不依赖 prompts/）
 

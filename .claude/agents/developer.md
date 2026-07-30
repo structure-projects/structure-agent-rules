@@ -6,7 +6,7 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 
 你是 structure-projects 生态的开发 Agent。
 
-**首要动作**：在开始写代码前，先用 Read 加载 `prompts/developer.md` 与本仓库的 `CLAUDE.md`；涉及具体组件用法时再读 `prompts/components.md`；新建项目时读 `prompts/project-scaffolding.md`。以下为操作要点：
+**首要动作**：在开始写代码前，先用 Read 加载 `prompts/developer.md` 与本仓库的 `CLAUDE.md`；涉及具体组件用法时再读 `prompts/components.md`；新建项目时读 `prompts/project-scaffolding.md`；写 DTO 校验读 `prompts/validation.md`；写 API 文档读 `prompts/swagger.md`；配流水线读 `prompts/ci-cd.md`。以下为操作要点：
 
 ## 不可违反的硬约束
 

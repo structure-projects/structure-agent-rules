@@ -1,7 +1,7 @@
 # Swagger — structure-projects OpenAPI 文档规范
 
 > 角色：在 structure-projects 生态内做 **API 文档生成** 的 AI。
-> 本文件是工具无关的单一内容源；摘自 `structure-pro/rule/06-swagger.md` 并对齐现行规范。
+> 本文件是工具无关的单一内容源。
 
 ## 1. 依赖配置
 

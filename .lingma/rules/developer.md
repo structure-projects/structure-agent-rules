@@ -1,6 +1,6 @@
 # structure-projects 开发规则
 
-> 完整规则见 `prompts/developer.md`；组件用法见 `prompts/components.md`。本文件为通义灵码项目规则（**建议设为"始终生效"**）。
+> 完整规则见 `prompts/developer.md`；组件用法见 `prompts/components.md`；DTO 校验见 `prompts/validation.md`；API 文档见 `prompts/swagger.md`；流水线见 `prompts/ci-cd.md`。本文件为通义灵码项目规则（**建议设为"始终生效"**）。
 
 ## 硬约束
 

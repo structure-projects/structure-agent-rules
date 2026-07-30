@@ -175,10 +175,10 @@ structure-{X}/
 - `structure-docs` README 引用了 `pd.md`，但根目录无此文件。
 - 多个 `structure-*` 业务中心仓库无 README，仅有描述字段。
 
-## 已识别的"老项目本地规范"（不算不一致，AI 应按本地规范工作）
+## 已识别的"老项目兼容形态"（AI 应按本地规范工作）
 
-- **`structure-pro/rule/`**（01-project-structure / 03-crud-template 等）基于 **4 模块 + Manager 模式 + Entity 直接用 `@TableId`**。这是 **单体/老项目的合法本地规范**，与 DDD 新规范并存（见前文"项目形态与适用规范"）。AI 在 structure-pro 仓库工作时 **沿用其 `rule/` 目录的本地规范**，不强行套用 DDD 规则。
-- 本规则库已从 `structure-pro/rule` 吸收了仍通用的内容（CVE 修复、构建配置、`TenantContextHolder`、`DataRuleEngine.filter`、各 Starter 配置、validation、swagger），**内容已自包含在本仓库**，不依赖 structure-pro 仓库。
+- 生态内存在仍基于 **4 模块 + Manager 模式 + Entity 直接用 `@TableId`** 的老项目/单体应用。这是 **合法的本地规范**，与 DDD 新规范并存（见前文"项目形态与适用规范"）。AI 在这类仓库工作时 **沿用其本地规范**（各仓库的 `rule/` / `PROJECT_RULES.md` / README，用前先验证），不强行套用 DDD 规则。
+- 本规则库已包含老项目兼容所需的全部通用内容（CVE 修复、构建配置、`TenantContextHolder`、`DataRuleEngine.filter`、各 Starter 配置、validation、swagger），**全部自包含在本仓库维护**，不依赖任何外部仓库。
 
 ## 已识别的"包名不一致"案例（生成 import 前 MUST 核对目标类所在的具体 starter）
 

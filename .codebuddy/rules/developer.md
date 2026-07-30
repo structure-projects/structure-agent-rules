@@ -5,7 +5,7 @@ description: structure-projects 开发规则。每次对话与内联请求都生
 
 # structure-projects 开发规则
 
-> 完整规则见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`。本文件为 CodeBuddy 速查版（alwaysApply: true）。
+> 完整规则见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；DTO 校验见 `prompts/validation.md`；API 文档见 `prompts/swagger.md`；流水线见 `prompts/ci-cd.md`。本文件为 CodeBuddy 速查版（alwaysApply: true）。
 
 ## 硬约束
 

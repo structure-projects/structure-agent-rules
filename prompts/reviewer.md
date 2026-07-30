@@ -26,7 +26,14 @@
 12. **安全**：SQL 注入 / XSS / 越权 / 敏感信息泄露 / 重放。
 13. **兼容性**：版本是否匹配（Spring Boot 4.0.6 + JDK 17 + `jakarta.*`；MyBatis-Plus 3.5.16；`structure-infra 1.3.1`）？
 14. **测试**：新增/修改的公共方法是否有对应测试？集成测试是否用 Testcontainers 真实中间件？
-15. **文档**：README / CHANGELOG / 配置示例是否同步更新？
+15. **CI/CD**：
+    - `.github/workflows/` 是否有 `test.yml` / `build-and-push.yml` / `release.yml` / `publish.yml`（模板见 `prompts/ci-cd.md`）？
+    - 不发布 Maven Central 的模块（`boot` / `sample` / `example`）是否在 **自身 pom.xml** 声明 `<maven.deploy.skip>true</maven.deploy.skip>`？
+    - 是否有硬编码的密码 / 密钥 / Token（凭据应走 GitHub Secrets）？
+    - `scripts/` 是否含 `mavenbuild.sh` / `install.sh` / `dockerbuild.sh` / `release.sh`？
+    - `structure-{X}-boot/` 是否含 `Dockerfile` + `liveness.sh`？
+    - 仓库内是否残留示例工程（`*-sample` / `*-example`）？正式项目不保留示例工程。
+16. **文档**：README / CHANGELOG / 配置示例是否同步更新？
 
 ## 硬性驳回项（出现即打回）
 
@@ -55,6 +62,10 @@
 - 绕过已有 Starter 自行装配已有能力的 Bean 且无合理说明。
 - 集成测试 Mock 数据库 / Redis / MQ。
 - 提交无 issue 关联的 `@Disabled` 测试。
+- 项目缺少单元测试或集成测试（所有项目 MUST 同时具备 `XxxTest` 与 `XxxIT`）。
+- 仓库内残留示例工程（`*-sample` / `*-example`）。
+- 代码 / 配置 / yml / README 中硬编码密码、密钥、Token（凭据应走 GitHub Secrets）。
+- 不发布 Maven Central 的模块（`boot` / `sample` / `example`）未在自身 pom.xml 声明 `<maven.deploy.skip>true</maven.deploy.skip>`。
 
 ## 建议性反馈（不驳回但需讨论）
 

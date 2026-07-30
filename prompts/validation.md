@@ -1,7 +1,7 @@
 # Validation — structure-projects 参数验证规范
 
 > 角色：在 structure-projects 生态内做 **接口参数校验** 的 AI。
-> 本文件是工具无关的单一内容源；摘自 `structure-pro/rule/05-validation.md` 并对齐现行 DDD 规范。
+> 本文件是工具无关的单一内容源。
 
 ## 1. 常用验证注解（Jakarta Validation）
 
