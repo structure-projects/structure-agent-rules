@@ -1,0 +1,50 @@
+---
+description: Android 原生评审规则。审查 PR / diff 时通过 @reviewer 手动调用。
+alwaysApply: false
+---
+
+# Android 原生评审规则
+
+> 完整见 `prompts/reviewer.md`
+
+## 审查清单
+
+### 架构
+- [ ] MVVM 模式正确，ViewModel 不持有 View 引用
+- [ ] Hilt 依赖注入正确配置
+- [ ] Repository 正确封装数据源
+
+### Kotlin 代码质量
+- [ ] `data class` 数据模型，`sealed class` UI 状态
+- [ ] `when` 穷举分支
+- [ ] 无 `!!` 非空断言
+- [ ] 无 `GlobalScope`
+- [ ] 无硬编码字符串
+
+### Compose
+- [ ] Composable 接收 `modifier` 参数
+- [ ] 使用 `MaterialTheme` 样式
+- [ ] `collectAsStateWithLifecycle()` 收集状态
+- [ ] `LazyColumn` 列表
+
+### 性能
+- [ ] 网络/DB 在 `Dispatchers.IO` 执行
+- [ ] Coil 图片懒加载
+- [ ] release 开启 minify + shrinkResources
+
+### 安全
+- [ ] 敏感数据 EncryptedSharedPreferences
+- [ ] 密钥通过 BuildConfig 注入
+- [ ] HTTPS 强制
+
+### 测试
+- [ ] 新增 ViewModel 有单元测试
+- [ ] 新增 Composable 有 UI 测试
+
+## 常见驳回
+1. MVVM 违规（ViewModel 持有 View）
+2. 主线程阻塞
+3. `!!` 滥用
+4. 硬编码
+5. 缺少测试
+6. GlobalScope 使用

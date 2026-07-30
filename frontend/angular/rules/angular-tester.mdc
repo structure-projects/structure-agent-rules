@@ -1,0 +1,37 @@
+---
+description: Angular 前端测试规则。编写测试代码时触发。
+globs:
+  - "**/*.spec.ts"
+  - "**/e2e/**"
+  - "**/karma.conf.js"
+alwaysApply: false
+---
+
+# Angular 前端测试规则
+
+> 完整见 `prompts/tester.md`
+
+## 测试分层
+| 层 | 工具 |
+|---|---|
+| 单元测试 | Jasmine/Karma 或 Jest |
+| 组件测试 | TestBed + Jasmine/Karma |
+| E2E | Playwright 或 Cypress |
+
+## 关键约定
+- **MUST** CI 使用 `ChromeHeadless`
+- **MUST** 开启 `codeCoverage: true`
+- **MUST** HTTP 测试使用 `HttpTestingController`
+- **MUST** `afterEach` 调用 `httpMock.verify()`
+- **MUST** 组件测试用 `setInput()` 设置 Signals Input
+
+## 测试工作流（MUST）
+- 每功能开发后立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 业务完成后写 E2E
+- 提交前 `ng test --no-watch` + `ng build` 全通过
+- **禁止** 测试/编译失败仍提交
+
+## 命名
+- 单元测试：`{name}.spec.ts`（同目录）
+- E2E：`{feature}.spec.ts`（`e2e/` 目录）

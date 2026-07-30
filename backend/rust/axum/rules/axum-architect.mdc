@@ -1,0 +1,48 @@
+---
+description: Axum 生态架构/设计约束。涉及模块划分、分层、API 设计、技术选型时生效。
+globs:
+  - "**/*.md"
+  - "**/Cargo.toml"
+alwaysApply: false
+---
+
+# Axum 架构/设计规则
+
+完整规范见 `prompts/architect.md`（single source of truth）。以下为关键内联规则：
+
+## 硬约束
+- Rust 版本 MUST >= 1.75（推荐 1.80+）
+- 模块名 MUST 使用 `snake_case`
+- 项目 MUST 遵循 Rust 标准项目布局：`src/main.rs`、`src/lib.rs`
+
+## 分层架构（Clean Architecture）
+- 依赖方向：`routes → services → repositories → models`（models 无外部依赖）
+- **routes/**：axum handler，只做参数提取 + 调用 service + 构建响应
+- **services/**：业务逻辑，`async fn`，返回 `Result<T, AppError>`
+- **repositories/**：trait 定义在 `repositories/` 模块，实现在子模块或独立文件
+- **models/**：领域实体、DTO、错误定义，禁止引用框架类型
+
+## 技术选型（推荐）
+| 层次 | 推荐 | 替代 |
+|---|---|---|
+| Web 框架 | axum 0.7+ | actix-web |
+| 异步运行时 | tokio | — |
+| ORM / DB | sqlx | sea-orm / diesel |
+| 配置 | config crate | figment |
+| 日志 | tracing + tracing-subscriber | env_logger |
+| 校验 | validator | garde |
+| DI | AppState（axum State） | axum-inject |
+| API 文档 | utoipa + utoipa-swagger-ui | aide |
+| 测试 | tokio::test + reqwest | axum_test |
+| HTTP 客户端 | reqwest | — |
+| 序列化 | serde + serde_json | — |
+| 错误处理 | thiserror + anyhow | snafu |
+
+## 关键约束
+- 路由 MUST 使用 `axum::Router` 组织，中间件按优先级排列
+- 共享状态 MUST 通过 `axum::extract::State` 注入
+- 配置 MUST 通过 `config` crate 加载，定义类型安全结构体
+- 错误 MUST 使用 `thiserror` 定义枚举，`IntoResponse` 统一转换
+- 生产 MUST 使用 `cargo build --release` 优化编译
+
+详细规则、API 设计约束、安全约束请读 `prompts/architect.md`。

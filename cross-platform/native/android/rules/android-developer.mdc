@@ -1,0 +1,47 @@
+---
+description: Android 原生开发约束。编写 Kotlin/Compose 代码时始终生效。
+globs:
+  - "**/*.kt"
+  - "**/*.kts"
+  - "**/build.gradle.kts"
+  - "**/libs.versions.toml"
+  - "**/AndroidManifest.xml"
+alwaysApply: true
+---
+
+# Android 原生开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- **MUST** Kotlin + Jetpack Compose + Material 3
+- **MUST** MVVM + Repository + Hilt DI
+- **MUST** Coroutines + Flow 异步
+- **MUST** Room + Retrofit + OkHttp
+- **MUST** Gradle Kotlin DSL + Version Catalog
+
+## 编码规范
+- **MUST** `data class` 数据模型，`sealed interface` UI 状态
+- **MUST** `when` 穷举所有分支
+- **禁止** `!!` 非空断言（使用 `?.let` / `?:`）
+- **禁止** `GlobalScope`（使用 `viewModelScope` / `lifecycleScope`）
+
+## Compose
+- **MUST** Composable 接收 `modifier: Modifier = Modifier`
+- **MUST** 使用 `MaterialTheme` 获取样式
+- **MUST** `collectAsStateWithLifecycle()` 收集状态
+- **MUST** `LazyColumn` 替代 `Column + verticalScroll`
+
+## 权限与安全
+- **MUST** 运行时权限 `rememberLauncherForActivityResult`
+- **MUST** HTTPS 强制，禁止明文传输
+- **MUST** 敏感数据 EncryptedSharedPreferences
+
+## 测试工作流（MUST）
+- 每开发功能立即写单测（JUnit + MockK），通过才能做下一个
+- 功能修改时同步改测试
+- 核心页面写 Compose UI 测试
+- 提交前 `./gradlew test` + `./gradlew lint` 全通过
+- **禁止** 测试/Lint 失败仍提交
+
+详细规则请读 `prompts/developer.md`。

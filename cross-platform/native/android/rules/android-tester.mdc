@@ -1,0 +1,38 @@
+---
+description: Android 原生测试规则。编写测试代码时触发。
+globs:
+  - "**/test/**"
+  - "**/androidTest/**"
+  - "**/*Test.kt"
+alwaysApply: false
+---
+
+# Android 原生测试规则
+
+> 完整见 `prompts/tester.md`
+
+## 测试分层
+| 层 | 工具 |
+|---|---|
+| 单元测试 | JUnit 4 + MockK |
+| UI 测试 | Compose Testing |
+| 集成测试 | Hilt Testing |
+| E2E | Espresso / UIAutomator |
+
+## 测试工作流（MUST）
+- 每功能开发后立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 核心页面写 Compose UI 测试
+- 提交前 `./gradlew test` + `./gradlew lint` 全通过
+- **禁止** 测试/Lint 失败仍提交
+
+## 命名
+- 单元测试：`{Target}Test.kt` → `src/test/`
+- UI 测试：`{Screen}Test.kt` → `src/androidTest/`
+- 方法名：`` `methodName - condition - expectedResult` ``
+
+## 关键规范
+- ViewModel 测试使用 `runTest` + `MainDispatcherRule`
+- MockK `coEvery` / `coVerify` 模拟 suspend 函数
+- Compose 测试 `createComposeRule()` + `onNodeWithText()`
+- Hilt 测试 `@HiltAndroidTest` + `@BindValue`

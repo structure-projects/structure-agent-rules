@@ -1,0 +1,47 @@
+---
+description: Express 生态架构/设计约束。涉及模块划分、分层、API 设计、技术选型时生效。
+globs:
+  - "**/*.md"
+  - "**/package.json"
+alwaysApply: false
+---
+
+# Express 架构/设计规则
+
+完整规范见 `prompts/architect.md`（single source of truth）。以下为关键内联规则：
+
+## 硬约束
+- Node.js >= 18（推荐 20 LTS）
+- 目录清晰分层：routes、controllers、services、models、middlewares
+
+## 分层架构
+```
+Router → Controller → Service → Model
+   ↓         ↓           ↓
+Middleware  DTO       Entity
+```
+
+## 技术选型
+| 层次 | 推荐 | 替代 |
+|---|---|---|
+| Web | Express | — |
+| 路由 | express.Router() | — |
+| ORM | Sequelize | Prisma / Mongoose / Knex |
+| 校验 | express-validator | Joi / Zod |
+| 认证 | jsonwebtoken + express-jwt | passport |
+| 安全 | helmet + cors + express-rate-limit | — |
+| 日志 | winston / pino | morgan |
+| 测试 | Jest + supertest | mocha + chai |
+
+## Express 核心特性
+- 中间件签名：`(req, res, next)` → 错误处理：`(err, req, res, next)` 4-arg
+- `express.Router()` 模块化路由
+- MUST 按顺序注册中间件：Security → Parser → Logger → Routes → Error Handler
+
+## 关键约束
+- 错误处理 MUST 使用 4-arg 中间件放最后
+- Controller 错误 MUST 传给 `next(err)`
+- MUST 使用 express.Router() 模块化路由
+- MUST 入参使用 express-validator 校验
+
+详细规则请读 `prompts/architect.md`。

@@ -1,0 +1,44 @@
+---
+description: Flutter 开发约束。编写 Dart/Widget 代码时始终生效。
+globs:
+  - "**/*.dart"
+  - "**/pubspec.yaml"
+  - "**/analysis_options.yaml"
+alwaysApply: true
+---
+
+# Flutter 开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- **MUST** Dart 3+ + Flutter 3.22+
+- **MUST** Riverpod 2.x（`@riverpod` code generation）
+- **MUST** GoRouter + Freezed + Dio
+- **MUST** `dart format` + `flutter analyze`
+
+## 编码规范
+- **MUST** `@freezed` 数据类 + `ConsumerWidget`
+- **MUST** `asyncValue.when()` 三态处理
+- **MUST** `const` 构造函数
+- **MUST** `Theme.of(context)` 样式
+- **禁止** `ChangeNotifier`、`Navigator.push()`
+
+## Widget
+- **MUST** ConsumerWidget / ConsumerStatefulWidget
+- **MUST** ListView.builder（非 ListView(children: [...])）
+- **MUST** SizedBox 间距
+
+## 安全
+- **MUST** flutter_secure_storage 存储 Token
+- **MUST** --dart-define 环境变量
+- **禁止** 硬编码密钥
+
+## 测试工作流（MUST）
+- 每开发功能立即写单测（flutter_test + mocktail），通过才能做下一个
+- 功能修改时同步改测试
+- 核心 Widget 写 Widget 测试
+- 提交前 `flutter analyze` + `flutter test` 全通过
+- **禁止** 分析/测试失败仍提交
+
+详细规则请读 `prompts/developer.md`。

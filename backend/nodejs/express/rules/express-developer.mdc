@@ -1,0 +1,44 @@
+---
+description: Express 生态开发约束。编写 JS 代码时始终生效。
+globs:
+  - "**/*.js"
+  - "**/package.json"
+alwaysApply: true
+---
+
+# Express 开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；校验见 `prompts/validation.md`；API 文档见 `prompts/swagger.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- 使用 async/await，Controller 中 try-catch 或 wrap 异步错误
+- 错误 MUST 传给 `next(err)`，由全局 4-arg 错误处理中间件统一处理
+- 路由 MUST 使用 express.Router() 模块化
+
+## 分层约束
+- **Controller**：参数提取 + 调用 Service + 返回响应。错误传 next(err)。禁止写业务逻辑
+- **Service**：业务逻辑，禁止引用 req/res 对象
+- **Model**：Sequelize/Mongoose/Prisma 数据访问
+
+## 关键优先级
+- **中间件顺序**：helmet → cors → json parser → routes → error handler (4-arg)
+- **错误处理**：Controller 中 next(err) → 全局 4-arg error handler 统一响应
+- **校验**：express-validator → validate 中间件 → Controller
+
+## 持久化
+- Sequelize / Prisma / Mongoose
+- MUST 生产环境禁止 sync() / autoIndex
+- MUST 使用版本化迁移
+- 禁止 Controller 直接使用 Model
+
+## 安全
+- MUST helmet + cors 白名单 + express-rate-limit
+
+## 测试工作流（MUST）
+- 每开发一个功能立即写单测，通过才能做下一个
+- 修改功能时同步修改测试
+- 业务完成后写集成测试
+- 提交前：npm test 全部通过
+- 禁止测试失败仍提交
+
+详细规则请读 `prompts/developer.md`。

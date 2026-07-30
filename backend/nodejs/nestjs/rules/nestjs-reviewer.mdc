@@ -1,0 +1,39 @@
+---
+description: NestJS 生态评审约束。审查 PR / diff / 设计文档时生效。
+globs:
+  - "**/*.md"
+alwaysApply: false
+---
+
+# NestJS 评审规则
+
+完整规范见 `prompts/reviewer.md`。以下为关键内联规则：
+
+## 评审顺序
+1. Module 声明完整性 → 2. Controller 职责 → 3. Service 注入 → 4. DTO 校验 → 5. Entity 定义 → 6. 异常处理 → 7. Swagger 文档 → 8. 配置 → 9. 中间件 → 10. 测试 → 11. 类型安全
+
+## 硬性驳回项
+- Module 未正确声明 imports/controllers/providers/exports
+- 跨模块直接注入未 exported 的 Provider
+- 手动 `new` Service 绕过 IOC
+- Controller 包含业务逻辑或直接注入 DataSource
+- 使用 `interface` 作为 DTO（必须 class）
+- DTO 未使用 class-validator
+- 未全局注册 ValidationPipe（或未配置 whitelist）
+- TypeORM `synchronize: true`（生产）
+- Service 抛非 NestJS 标准异常
+- 硬编码配置值/密钥
+- 未启用 helmet / CORS 白名单
+- 新功能无单测；改功能未同步测试；僵尸断言
+- 测试/编译失败仍提交
+
+## 建议性反馈
+- 使用 `any` 类型
+- Service 方法无返回类型注解
+- Controller 直接返回 Entity（应返回 DTO）
+- 未使用 @ApiTags/@ApiOperation
+
+## 反馈格式
+每条反馈含：位置（`file:line`）、级别（MUST-FIX / SHOULD-FIX / NIT / QUESTION）、依据、建议。
+
+详细规则请读 `prompts/reviewer.md`。

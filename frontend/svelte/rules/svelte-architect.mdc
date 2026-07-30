@@ -1,0 +1,36 @@
+---
+description: Svelte 前端架构规则。涉及选型、路由、状态管理、SvelteKit 时触发。
+globs:
+  - "**/svelte.config.js"
+  - "**/vite.config.ts"
+  - "**/+layout.svelte"
+  - "**/hooks.server.ts"
+alwaysApply: false
+---
+
+# Svelte 前端架构规则
+
+> 完整见 `prompts/architect.md`
+
+## 版本策略
+- **MUST** Svelte 4 或 Svelte 5（runes），不混用
+- **SHOULD** SvelteKit 为全栈框架
+
+## 路由（SvelteKit）
+- 文件路由：`+page.svelte`、`+layout.svelte`、`+server.ts`
+- 数据加载：`+page.server.ts` 的 `load` 函数
+- API 端点：`+server.ts` 导出 HTTP 方法
+
+## 状态管理
+- Svelte 4：stores (`writable`、`derived`)
+- Svelte 5：`$state()`、`$derived()`、`$effect()` runes
+- Context API：`setContext` / `getContext`
+
+## 构建
+- Vite（SvelteKit 内置）
+- TypeScript (`<script lang="ts">`)
+- adapter 按部署目标选择
+
+## 样式
+- `<style>` 标签自动 scoped
+- Tailwind CSS 或 Skeleton UI

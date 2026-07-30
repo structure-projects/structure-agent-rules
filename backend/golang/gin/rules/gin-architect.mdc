@@ -1,0 +1,44 @@
+---
+description: Gin 生态架构/设计约束。涉及模块划分、分层、API 设计、技术选型时生效。
+globs:
+  - "**/*.md"
+  - "**/go.mod"
+  - "**/Makefile"
+alwaysApply: false
+---
+
+# Gin 架构/设计规则
+
+完整规范见 `prompts/architect.md`（single source of truth）。以下为关键内联规则：
+
+## 硬约束
+- Go 版本 MUST >= 1.21（推荐 1.23+）
+- 包名 MUST 全部小写、单数、无下划线
+- 项目 MUST 遵循 Go 标准布局：`cmd/`、`internal/`、`pkg/`
+
+## 分层架构（Clean Architecture）
+- 依赖方向：`handler → service → repository → model`（model 无外部依赖）
+- **handler/**：只做参数绑定 + 调用 service + 渲染响应
+- **service/**：接口定义 + 实现分离，使用 context.Context 作为第一参数
+- **repository/**：接口在 `repository/` 包，GORM 实现在 `repository/gorm/` 子包
+- **model/**：领域实体，禁止引用框架层类型
+
+## 技术选型（推荐）
+| 层次 | 推荐 | 替代 |
+|---|---|---|
+| Web | Gin | — |
+| ORM | GORM | sqlx / ent |
+| 配置 | Viper | — |
+| 日志 | Zap / zerolog | logrus |
+| 校验 | go-playground/validator | ozzo-validation |
+| DI | Wire | dig / fx |
+| API 文档 | swaggo/swag | — |
+| 测试 | testify + httptest | ginkgo |
+
+## 关键约束
+- 路由 MUST 使用 Group 分组，中间件按优先级排列
+- 配置 MUST 通过 Viper 加载，定义类型安全结构体
+- 错误 MUST 定义自定义类型，handler 层统一转换 HTTP 状态码
+- 生产 MUST 使用多阶段 Docker 构建 + 静态编译（CGO_ENABLED=0）
+
+详细规则、API 设计约束、安全约束请读 `prompts/architect.md`。

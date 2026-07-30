@@ -1,0 +1,39 @@
+---
+description: NestJS 生态测试约束。编写测试代码时生效。
+globs:
+  - "**/*.spec.ts"
+  - "**/*.e2e-spec.ts"
+alwaysApply: false
+---
+
+# NestJS 测试规则
+
+完整规范见 `prompts/tester.md`。以下为关键内联规则：
+
+## 测试工作流（MUST）
+- 每开发一个功能立即写单测，通过才能做下一个
+- 修改功能时同步修改测试
+- 业务完成后写 E2E 测试
+- 提交前：`npm test` + `npm run test:e2e` 通过 + `npm run build` 编译通过
+
+## 分层与命名
+- `*.spec.ts`（同目录）— 单元测试，`Test.createTestingModule` 不启动容器
+- `test/*.e2e-spec.ts` — E2E 测试，启动完整 NestJS 容器 + 真实数据库
+- 使用 `supertest` 发送 HTTP 请求
+
+## 必须覆盖
+- 正常+异常+边界
+- ExceptionFilter、Guard、Interceptor、Pipe 行为
+
+## Mock 边界
+- 只允许 Mock 外部 HTTP API、第三方 SDK
+- 允许 Mock Repository/Service（单测中）
+- 禁止 E2E 测试 Mock 数据库
+
+## 禁止
+- 僵尸断言
+- `setTimeout` 等待异步
+- E2E 测试 Mock 数据库
+- 跳过测试无注释
+
+详细规则请读 `prompts/tester.md`。

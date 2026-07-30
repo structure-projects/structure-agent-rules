@@ -1,0 +1,152 @@
+---
+description: Quarkus 架构与设计约束
+globs: **/*.java,**/*.kt,**/pom.xml,**/build.gradle*
+alwaysApply: false
+---
+
+# Quarkus 架构与设计约束
+
+> 本规则适用于 Quarkus 3.x 项目的架构设计评审。详细架构规范见 `prompts/architect.md`。
+
+## DDD 分层架构（推荐）
+
+```
+api/          → JAX-RS Resource，HTTP 接入层
+domain/       → Entity + Repository 接口 + DomainService
+application/  → ApplicationService，事务边界，编排领域服务
+infrastructure/ → 外部系统集成（REST Client, MQ, Cache）
+```
+
+## 模块划分
+
+```
+order-module/
+├── order-api/           → JAX-RS Resource + DTO
+├── order-domain/        → Panache Entity + DomainService
+├── order-application/   → ApplicationService
+└── order-infrastructure/ → REST Client + 外部集成
+```
+
+## 关键架构决策（MUST）
+
+### 1. CDI 依赖注入
+
+```java
+@ApplicationScoped
+public class OrderService {
+    private final OrderRepository orderRepository;
+    private final UserClient userClient;
+    private final EventBus eventBus;
+
+    @Inject
+    public OrderService(OrderRepository orderRepository,
+                         UserClient userClient,
+                         EventBus eventBus) {
+        this.orderRepository = orderRepository;
+        this.userClient = userClient;
+        this.eventBus = eventBus;
+    }
+}
+```
+
+### 2. Panache — ORM 策略选择
+
+```java
+// Active Record 模式：Entity 自带 CRUD
+@Entity
+public class Order extends PanacheEntity {
+    public Long userId;
+    public BigDecimal amount;
+    public LocalDateTime createdAt;
+
+    public static List<Order> findByUserId(Long userId) {
+        return list("userId", userId);
+    }
+}
+
+// Repository 模式：独立的 Repository 类
+@ApplicationScoped
+public class OrderRepository implements PanacheRepository<Order> {
+    public List<Order> findRecent(LocalDateTime since) {
+        return find("createdAt >= ?1", since).list();
+    }
+}
+```
+
+### 3. REST 客户端（MicroProfile REST Client）
+
+```java
+@Path("/api/v1/users")
+@RegisterRestClient(configKey = "user-service")
+public interface UserClient {
+
+    @GET
+    @Path("/{id}")
+    UserVO findById(@PathParam("id") Long id);
+
+    @GET
+    List<UserVO> listAll();
+}
+```
+
+配置：
+
+```properties
+# application.properties
+user-service/mp-rest/url=http://user-service:8080
+user-service/mp-rest/connectTimeout=3000
+user-service/mp-rest/readTimeout=10000
+```
+
+### 4. 响应式（Mutiny）
+
+```java
+@Path("/api/v1/orders")
+public class OrderResource {
+
+    @GET
+    @Path("/{id}")
+    public Uni<Response> findById(@PathParam("id") Long id) {
+        return orderRepository.findById(id)
+            .onItem().ifNotNull().transform(order -> Response.ok(OrderVO.from(order)).build())
+            .onItem().ifNull().continueWith(() -> Response.status(404).build());
+    }
+}
+```
+
+### 5. 响应式消息（SmallRye Reactive Messaging）
+
+```java
+// 发布消息到 Kafka
+@ApplicationScoped
+public class OrderEventPublisher {
+    @Inject
+    @Channel("orders-out")
+    Emitter<OrderEvent> emitter;
+
+    public void publish(OrderEvent event) {
+        emitter.send(event).await().indefinitely();
+    }
+}
+
+// 消费消息
+@ApplicationScoped
+public class OrderEventConsumer {
+    @Incoming("orders-in")
+    public CompletionStage<Void> consume(OrderEvent event) {
+        // 处理逻辑
+        return CompletableFuture.completedFuture(null);
+    }
+}
+```
+
+## 设计检查清单
+
+- [ ] 是否采用 DDD 分层？
+- [ ] Panache 使用 Active Record 还是 Repository 模式？
+- [ ] 服务间调用使用 MicroProfile REST Client？
+- [ ] 响应式端点返回 `Uni<T>` / `Multi<T>`？
+- [ ] 配置使用 `@ConfigProperty` / `@ConfigMapping`？
+- [ ] 无 Spring 框架依赖？
+
+详见 [架构设计 prompt](prompts/architect.md)。

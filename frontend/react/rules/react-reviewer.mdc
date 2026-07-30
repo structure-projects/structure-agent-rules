@@ -1,0 +1,55 @@
+---
+description: React 前端评审规则。审查 PR / diff 时通过 @reviewer 手动调用。
+alwaysApply: false
+---
+
+# React 前端评审规则
+
+> 完整见 `prompts/reviewer.md`
+
+## 审查清单
+
+### 组件
+- [ ] Functional Component（禁止 Class Component）
+- [ ] Props 有完整 TypeScript interface
+- [ ] 文件名 PascalCase
+
+### Hooks
+- [ ] `useEffect` 有正确依赖和清理
+- [ ] 无 Hook 在条件/循环中调用
+- [ ] 可复用逻辑提取到自定义 Hook
+
+### 状态管理
+- [ ] 服务端数据用 TanStack Query
+- [ ] 全局状态用 Zustand/RTK
+- [ ] mutation 后 invalidate queries
+
+### 性能
+- [ ] 路由懒加载 + Suspense
+- [ ] 纯展示组件 React.memo
+- [ ] 大列表虚拟滚动
+
+### 安全
+- [ ] 用户输入校验
+- [ ] `dangerouslySetInnerHTML` 经 XSS 过滤
+- [ ] 无 API Token 硬编码
+
+### 样式
+- [ ] Tailwind CSS / CSS Modules
+- [ ] 无内联 style
+
+### Error Handling
+- [ ] Error Boundary 包裹关键路由
+- [ ] API 错误处理
+
+### 测试
+- [ ] 新增功能有单元测试
+- [ ] E2E 覆盖核心流程
+
+## 常见驳回
+1. 使用 Class Component
+2. useEffect 依赖缺失/错误
+3. 手写 loading/error（应用 TanStack Query）
+4. Props 无 TypeScript 类型
+5. Hook 调用位置违规
+6. 引入新依赖未评审

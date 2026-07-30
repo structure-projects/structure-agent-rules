@@ -1,0 +1,49 @@
+---
+description: Angular 前端评审规则。审查 PR / diff 时通过 @reviewer 手动调用。
+alwaysApply: false
+---
+
+# Angular 前端评审规则
+
+> 完整见 `prompts/reviewer.md`
+
+## 审查清单
+
+### 组件
+- [ ] Standalone Components（非 NgModules）
+- [ ] imports 数组明确声明
+- [ ] Signals API 而非装饰器
+- [ ] `ChangeDetectionStrategy.OnPush`
+- [ ] selector `app-` 前缀
+
+### TypeScript
+- [ ] strict 模式，无 `any` 滥用
+- [ ] `inject()` 替代构造函数注入
+
+### 性能
+- [ ] 路由懒加载
+- [ ] 大列表虚拟滚动（CDK）
+- [ ] `trackBy` 优化 `@for`
+- [ ] 避免不必要订阅
+
+### 安全
+- [ ] 表单 Angular 校验
+- [ ] HTML 经 DomSanitizer
+
+### RxJS
+- [ ] 订阅在 `ngOnDestroy` 中取消
+- [ ] `async` 管道减少手动订阅
+- [ ] 无嵌套 subscribe
+
+### 测试
+- [ ] 新增组件有 TestBed 测试
+- [ ] 服务有单元测试
+- [ ] E2E 覆盖核心流程
+
+## 常见驳回
+1. 使用 NgModules 而非 Standalone
+2. 装饰器 `@Input()` 而非 Signals `input()`
+3. 订阅未取消
+4. `any` 类型滥用
+5. 性能问题（未 OnPush、未懒加载）
+6. 引入新 UI 库未评审

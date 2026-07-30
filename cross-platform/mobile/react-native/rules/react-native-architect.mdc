@@ -1,0 +1,32 @@
+---
+description: React Native 架构规则。涉及导航、状态管理、New Architecture 等架构选型时触发。
+globs:
+  - "**/app.json"
+  - "**/eas.json"
+  - "**/src/app/**"
+  - "**/babel.config.js"
+alwaysApply: false
+---
+
+# React Native 架构规则
+
+> 完整见 `prompts/architect.md`
+
+## 架构模式
+- **MUST** Feature-based 或 Layer-based 分层架构
+- **MUST** Custom Hooks 封装业务逻辑
+- **MUST** New Architecture（Fabric + TurboModules）
+
+## 状态管理
+- 全局：Zustand（轻量）/ Redux Toolkit（复杂）
+- 服务端：TanStack Query
+- 局部：useState / useReducer
+
+## 导航
+- React Navigation 6.x + Native Stack Navigator
+- 类型安全导航参数
+- 深层链接 linking 配置
+
+## 平台适配
+- `.ios.tsx` / `.android.tsx` 文件后缀
+- `Platform.select()` 运行时差异

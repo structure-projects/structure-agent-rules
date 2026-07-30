@@ -1,0 +1,65 @@
+---
+description: Electron 开发约束。编写主进程/渲染进程代码时始终生效。
+globs:
+  - "**/*.js"
+  - "**/*.ts"
+  - "**/*.jsx"
+  - "**/*.tsx"
+  - "**/main.js"
+  - "**/preload.js"
+  - "**/*.html"
+  - "**/forge.config.js"
+  - "**/electron-builder.yml"
+alwaysApply: true
+---
+
+# Electron 开发规则
+
+完整规范见 `prompts/developer.md`；架构见 `prompts/architect.md`；组件见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- **MUST** Electron 28+ + Node.js 18+
+- **MUST** 进程模型：Main（Node.js）+ Renderer（Chromium，沙箱）
+- **MUST** `contextIsolation: true` + `nodeIntegration: false` + `sandbox: true`
+- **MUST** IPC：`ipcMain.handle()` / `ipcRenderer.invoke()`（异步），`contextBridge` 暴露 API
+- **MUST** 前端框架任意（React/Vue/Svelte），独立于 Electron 层
+
+## 编码规范
+
+### 主进程（Main Process）
+- **MUST** 使用 `ipcMain.handle('channel', handler)` 处理渲染进程请求
+- **MUST** 使用 `BrowserWindow` 管理窗口
+- **MUST** 文件操作在主进程（`fs`、`path`），通过 IPC 暴露给渲染进程
+- **MUST** 错误处理：try-catch + 返回结构化错误对象
+- **禁止** 在主进程使用浏览器 API（`document`、`window`）
+
+### Preload 脚本
+- **MUST** 使用 `contextBridge.exposeInMainWorld('electronAPI', api)` 暴露 API
+- **MUST** 只暴露必要的函数（最小权限原则）
+- **禁止** 在 preload 中直接暴露 `ipcRenderer`（通过 contextBridge 封装）
+- **禁止** 在 preload 中使用 Node.js 核心模块（`fs`、`child_process` 等）
+
+### 渲染进程（Renderer Process）
+- **MUST** 通过 `window.electronAPI` 调用主进程功能
+- **MUST** 前端框架独立选择（React/Vue/Svelte）
+- **禁止** 在渲染进程直接使用 `require('electron')`（nodeIntegration: false）
+- **禁止** 在渲染进程直接访问文件系统
+
+## 安全
+- **MUST** `contextIsolation: true`
+- **MUST** `nodeIntegration: false`
+- **MUST** `sandbox: true`
+- **MUST** `webSecurity: true`
+- **禁止** `enableRemoteModule: true`
+- **MUST** CSP 配置
+
+## 测试工作流（MUST）
+- 每开发功能立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 主进程写 Jest 单元测试
+- 渲染进程写组件测试（框架对应工具）
+- 核心流程写 E2E（Playwright）
+- 提交前 `npm run test` + `npm run lint` + `npx tsc --noEmit` 全通过
+- **禁止** 测试/Lint/类型检查失败仍提交
+
+详细规则请读 `prompts/developer.md`。

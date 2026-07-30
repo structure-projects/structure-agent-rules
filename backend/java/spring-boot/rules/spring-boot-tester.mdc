@@ -1,0 +1,42 @@
+---
+description: Spring Boot 测试约束。编写测试代码时生效。
+globs:
+  - "**/test/**/*.java"
+  - "**/*Test.java"
+  - "**/*IT.java"
+alwaysApply: false
+---
+
+# Spring Boot 测试规则
+
+完整规范见 `prompts/tester.md`。以下为关键内联规则：
+
+## 测试工作流（MUST）
+- 每开发一个功能 **立即** 写单元测试，**单测通过才能做下一个功能**
+- 功能有修改时 **同步修改测试** 并通过
+- 业务完成后写 **业务流程集成测试**（`XxxIT`），通过才算交付
+- 覆盖正常+异常+边界；断言验证行为与数据（**禁止** 僵尸断言）
+- **提交前**：`mvn clean test` 全部通过 + `mvn clean package -DskipTests` 编译通过
+
+## 分层与命名
+- `XxxTest` — 单元测试，不启动 Spring 上下文（JUnit 5 + Mockito）
+- `XxxIT` — 集成测试，**必须** 用真实中间件（Testcontainers），**禁止** Mock 数据库/Redis/MQ
+- 测试方法命名：`{方法名}_{场景}_{期望结果}`
+
+## 必须覆盖
+- 正常路径：合法输入得到预期输出
+- 异常路径：非法输入抛出正确异常
+- 边界条件：空值、空集合、最大值、最小值
+- 事务回滚验证
+- 并发场景（乐观锁冲突）
+
+## Mock 边界
+- 只允许 Mock 进程边界（第三方 HTTP / 外部 SaaS）
+- 禁止 Mock 自己项目的 `Repository` / `Service` / `Mapper`
+
+## 禁止
+- 僵尸断言（只 `assertNotNull`）
+- `Thread.sleep` 等待异步 —— 用 Awaitility
+- 无 issue 关联的 `@Disabled`
+
+详细规则请读 `prompts/tester.md`。

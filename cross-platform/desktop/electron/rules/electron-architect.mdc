@@ -1,0 +1,57 @@
+---
+description: Electron 架构规则。涉及进程模型、IPC、窗口管理、安全等架构选型时触发。
+globs:
+  - "**/main.js"
+  - "**/main.ts"
+  - "**/preload.js"
+  - "**/preload.ts"
+  - "**/electron-builder.yml"
+  - "**/forge.config.js"
+alwaysApply: false
+---
+
+# Electron 架构规则
+
+> 完整见 `prompts/architect.md`
+
+## 进程模型
+- **MUST** Main Process（Node.js 全能力）：窗口管理、文件系统、系统 API、IPC 处理
+- **MUST** Renderer Process（Chromium，沙箱隔离）：UI 渲染，只能通过 IPC 访问系统能力
+- **MUST** Preload Script：contextBridge 桥接层，安全暴露有限 API
+
+## IPC 通信
+- **MUST** Main → Renderer：`ipcMain.handle('channel', handler)` + `ipcRenderer.invoke('channel', args)`
+- **MUST** Main → Renderer 推送：`webContents.send('event', data)` + `ipcRenderer.on('event', handler)`
+- **MUST** Renderer → Main：`ipcRenderer.invoke('channel', args)` + `ipcMain.handle('channel', handler)`
+- **禁止** `ipcRenderer.sendSync()`（阻塞渲染进程）
+
+## 窗口管理
+- **MUST** `BrowserWindow` 管理主窗口
+- **SHOULD** `BrowserView` 嵌入 Web 内容
+- **MUST** `Menu` + `MenuItem` 原生菜单
+- **SHOULD** `Tray` 系统托盘
+
+## 前端框架
+- **MUST** 前端框架独立于 Electron（React/Vue/Svelte/Angular）
+- **MUST** 前端构建输出由 Electron 加载（`loadFile()` 或 `loadURL()`）
+- **MUST** 开发时使用 `loadURL('http://localhost:xxxx')`，生产用 `loadFile('index.html')`
+
+## 数据层
+- **MUST** 文件系统：主进程 `fs`，通过 IPC 暴露
+- **MUST** SQL：`better-sqlite3`（同步，快）或 `sqlite3`（异步）
+- **SHOULD** 键值存储：`electron-store`（加密可选）
+- **MUST** 数据库操作在主进程，通过 IPC 暴露给渲染进程
+
+## 安全
+- **MUST** `contextIsolation: true`
+- **MUST** `nodeIntegration: false`
+- **MUST** `sandbox: true`
+- **MUST** `webSecurity: true`
+- **禁止** `enableRemoteModule: true`
+- **MUST** CSP 配置
+- **MUST** preload 只暴露必要 API（最小权限）
+
+## 打包
+- **MUST** `electron-builder` 或 `electron-forge`
+- **SHOULD** 自动更新：`electron-updater`（配合 electron-builder）
+- **SHOULD** 代码签名（macOS/Windows）

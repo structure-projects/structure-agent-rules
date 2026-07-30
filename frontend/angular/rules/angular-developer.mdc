@@ -1,0 +1,55 @@
+---
+description: Angular 前端开发约束。编写 Angular/TS/SCSS 代码时始终生效。
+globs:
+  - "**/*.component.ts"
+  - "**/*.component.html"
+  - "**/*.component.scss"
+  - "**/*.service.ts"
+  - "**/app.config.ts"
+  - "**/app.routes.ts"
+  - "**/angular.json"
+  - "**/tsconfig.json"
+alwaysApply: true
+---
+
+# Angular 前端开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- **MUST** Angular 17+ Standalone Components
+- **MUST** TypeScript strict 模式
+- **MUST** SCSS 样式预处理器
+
+## 组件
+- **MUST** `standalone: true`
+- **MUST** 明确声明 `imports` 数组
+- **SHOULD** Signals API（`input()`、`output()`）替代装饰器
+- **MUST** `ChangeDetectionStrategy.OnPush`
+- **MUST** selector 使用 `app-` 前缀
+
+## 服务
+- **MUST** `@Injectable({ providedIn: 'root' })`
+- **SHOULD** `inject()` 替代构造函数注入
+- **MUST** HTTP 调用通过 `HttpClient`
+
+## 路由
+- **MUST** `loadComponent` / `loadChildren` 懒加载
+- **SHOULD** 函数式守卫
+
+## 样式
+- **MUST** SCSS + ViewEncapsulation
+- **禁止** 全局样式覆盖第三方组件
+
+## 表单
+- **SHOULD** Reactive Forms 优先
+- **MUST** 表单校验使用 Angular Validators
+
+## 测试工作流（MUST）
+- 每开发功能立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 业务完成后写 E2E（Playwright/Cypress）
+- 提交前 `ng test` + `ng build` 全通过
+- **禁止** 测试/编译失败仍提交
+
+详细规则请读 `prompts/developer.md`。

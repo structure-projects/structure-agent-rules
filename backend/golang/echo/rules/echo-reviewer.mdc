@@ -1,0 +1,41 @@
+---
+description: Echo 生态评审约束。审查 PR / diff / 设计文档时生效。
+globs:
+  - "**/*.md"
+alwaysApply: false
+---
+
+# Echo 评审规则
+
+完整规范见 `prompts/reviewer.md`。以下为关键内联规则：
+
+## 评审顺序
+1. 包名与目录 → 2. 分层依赖 → 3. Handler 职责 → 4. Service 接口 → 5. Repository 实现 → 6. 错误处理 → 7. DI → 8. Echo 配置 → 9. 中间件 → 10. 测试 → 11. 文档
+
+## 硬性驳回项
+- 包名使用大写、下划线、复数
+- Handler 直接操作 `ent.Client` 或 `*sqlx.DB`
+- Handler 包含业务逻辑
+- Service 引用 `echo.Context`
+- 使用 `panic` 处理请求级错误
+- 忽略错误（`_ = fn()`）
+- 使用全局变量持有依赖
+- 硬编码配置值
+- 生产环境使用 AutoMigrate
+- 未注册 Recover 中间件
+- 未配置 BodyLimit
+- CORS 使用 `*` 通配符（生产）
+- 新功能无单测；改功能未同步测试；僵尸断言
+- 测试/编译失败仍提交
+
+## 建议性反馈
+- 函数体超过 50 行
+- 函数参数超过 5 个
+- 导出符号缺少文档注释
+- Echo handler 使用 `c.String()` 返回非 JSON 响应
+- 未自定义 HTTPErrorHandler
+
+## 反馈格式
+每条反馈含：位置（`file:line`）、级别（MUST-FIX / SHOULD-FIX / NIT / QUESTION）、依据、建议。
+
+详细规则请读 `prompts/reviewer.md`。

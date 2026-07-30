@@ -1,0 +1,36 @@
+---
+description: iOS 原生测试规则。编写测试代码时触发。
+globs:
+  - "**/*Tests/**"
+  - "**/*UITests/**"
+  - "**/*Test.swift"
+alwaysApply: false
+---
+
+# iOS 原生测试规则
+
+> 完整见 `prompts/tester.md`
+
+## 测试分层
+| 层 | 工具 |
+|---|---|
+| 单元测试 | XCTest |
+| UI 测试 | XCUITest |
+| 快照测试 | Swift-Snapshot-Testing |
+
+## 测试工作流（MUST）
+- 每功能开发后立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 核心流程写 XCUITest
+- 提交前 `xcodebuild test` + `swiftlint --strict` 全通过
+- **禁止** 测试/Lint 失败仍提交
+
+## 命名
+- 单元测试：`{Target}Tests.swift` → `MyAppTests`
+- UI 测试：`{Feature}UITests.swift` → `MyAppUITests`
+
+## 关键规范
+- ViewModel 测试 `@MainActor` + Mock Repository
+- 异步测试 `async/await` 或 `XCTestExpectation`
+- UI 测试 `accessibilityIdentifier` 定位元素
+- `setUp()` / `tearDown()` 初始化/清理 SUT

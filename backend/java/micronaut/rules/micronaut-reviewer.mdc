@@ -1,0 +1,78 @@
+---
+description: Micronaut 代码评审约束
+globs: **/*.java,**/build.gradle*,**/build.gradle.kts
+alwaysApply: false
+---
+
+# Micronaut 代码评审约束
+
+> 本规则适用于 Micronaut 4.x 项目的代码评审。详细评审规范见 `prompts/reviewer.md`。
+
+## 评审重点（MUST 检查）
+
+### 1. AOT 兼容性
+
+- 所有 Bean MUST 使用构造器注入（`private final` 字段）
+- **禁止** `@Inject` 字段注入
+- **禁止** 反射调用（`Class.forName()` 等）
+- **禁止** 动态代理（CGLIB / JDK Proxy）
+
+### 2. Micronaut 专属检查
+
+```java
+// ❌ 错误：使用 Spring 注解
+@Autowired
+private UserService userService;
+
+// ✅ 正确：Micronaut 构造器注入
+private final UserService userService;
+public OrderController(UserService userService) {
+    this.userService = userService;
+}
+```
+
+### 3. HTTP 客户端
+
+- **禁止** 使用 `RestTemplate` / `WebClient`（Spring 风格）
+- **必须** 使用 `@Client` 声明式接口
+- 超时、重试配置 MUST 在 `application.yml` 中显式声明
+
+### 4. 响应式 API
+
+- Controller 方法返回 `Mono<T>` / `Flowable<T>` 或 `HttpResponse<T>`
+- **禁止** 在响应式链中调用 `.block()`
+- 数据库操作 MUST 使用响应式驱动（R2DBC）
+
+### 5. 配置管理
+
+- 使用 `@ConfigurationProperties` 而非 `@Value`
+- 敏感配置 MUST 加密或使用外部 Secret 管理
+
+### 6. 安全性
+
+- 所有 Controller MUST 有 `@Secured` 注解
+- JWT 令牌校验 MUST 在 Filter 层完成
+- **禁止** 在 Controller 中手动解析 JWT
+
+## 评审检查清单
+
+- [ ] AOT 兼容性（无反射、无字段注入）
+- [ ] 无 Spring 框架依赖混入
+- [ ] HTTP 客户端使用 `@Client` 声明式接口
+- [ ] 响应式链中无 `.block()` 调用
+- [ ] 配置使用 `@ConfigurationProperties`
+- [ ] Controller 有 `@Secured` 注解
+- [ ] 异常处理使用 `@Error` 全局处理或 `@ExceptionHandler`
+- [ ] 日志使用 SLF4J，避免 `System.out.println`
+
+## 常见反模式
+
+| 反模式 | 正确做法 |
+|---|---|
+| `@Inject` 字段注入 | 构造器注入 + `private final` |
+| `RestTemplate` 调用外部 API | `@Client` 声明式接口 |
+| `@Autowired` 或 Spring 注解 | Micronaut 对应注解 |
+| `.block()` 在 Controller 中 | 返回 `Mono<T>` |
+| `System.out.println` | SLF4J Logger |
+
+详见 [代码评审 prompt](prompts/reviewer.md)。

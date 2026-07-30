@@ -1,0 +1,58 @@
+---
+description: Ionic 架构规则。涉及 Capacitor 插件、分层架构、路由等架构选型时触发。
+globs:
+  - "**/ionic.config.json"
+  - "**/capacitor.config.ts"
+  - "**/angular.json"
+  - "**/src/app/**"
+  - "**/app.module.ts"
+alwaysApply: false
+---
+
+# Ionic 架构规则
+
+> 完整见 `prompts/architect.md`
+
+## 架构模式
+- **MUST** Feature-module 分层架构（按业务模块组织）
+- **MUST** Core/Shared/Feature 三层模块划分
+- **MUST** Service/Provider 层封装业务逻辑与 API 调用
+
+## 前端框架选择
+- **Angular（推荐）**：NgRx 状态管理 + Angular Router
+- **React**：Zustand/Redux + React Router
+- **Vue**：Pinia + Vue Router
+- 三种框架均通过 Ionic 组件层统一 UI
+
+## 状态管理
+| 框架 | 推荐方案 | 备选 |
+|---|---|---|
+| Angular | NgRx（`@ngrx/store` + `@ngrx/effects`） | Akita、RxJS BehaviorSubject |
+| React | Zustand | Redux Toolkit |
+| Vue | Pinia | Vuex 4 |
+
+## 路由
+- Angular: Angular Router + `IonRouterOutlet` + lazy loading
+- React: React Router 6 + `IonReactRouter`
+- Vue: Vue Router 4 + `IonRouterOutlet`
+- **MUST** Tab 导航使用 `<ion-tabs>` + `<ion-tab-bar>`
+
+## Capacitor 插件体系
+- **MUST** Camera: `@capacitor/camera`
+- **MUST** Filesystem: `@capacitor/filesystem`
+- **MUST** Storage: `@capacitor/preferences` 或 `@ionic/storage`
+- **SHOULD** Push: `@capacitor/push-notifications`
+- **SHOULD** Geolocation: `@capacitor/geolocation`
+- **SHOULD** Network: `@capacitor/network`
+- **SHOULD** Haptics: `@capacitor/haptics`
+
+## 数据层
+- **MUST** HTTP: Angular HttpClient 或 axios + Capacitor HTTP plugin（原生适配）
+- **MUST** Storage: `@capacitor/preferences`（键值）或 `@ionic/storage`（带 SQLite 回退）
+- **SHOULD** SQL: `@capacitor-community/sqlite` 或 `@ionic/storage` 的 SQLite 驱动
+
+## 安全
+- **MUST** HTTPS 强制
+- **MUST** 敏感数据使用 Secure Storage（`@capacitor-community/secure-storage` 或 `cordova-plugin-secure-storage`）
+- **MUST** API 密钥通过环境变量注入
+- **SHOULD** CSP 头部配置

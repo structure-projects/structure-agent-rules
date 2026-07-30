@@ -1,0 +1,38 @@
+---
+description: UniApp 前端架构规则。涉及 pages.json、路由、平台适配、状态管理时触发。
+globs:
+  - "**/pages.json"
+  - "**/manifest.json"
+  - "**/App.vue"
+  - "**/main.ts"
+alwaysApply: false
+---
+
+# UniApp 前端架构规则
+
+> 完整见 `prompts/architect.md`
+
+## 版本与模式
+- **MUST** Vue 3 + UniApp
+- **MUST** `pages.json` 配置所有页面、tabBar
+
+## 路由
+- 路由由 `pages.json` 定义（非 Vue Router）
+- `uni.navigateTo` / `uni.switchTab` / `uni.redirectTo` / `uni.reLaunch`
+- 参数通过 URL query 传递
+
+## 条件编译
+- `#ifdef H5` / `#ifdef MP-WEIXIN` / `#ifdef APP-PLUS`
+- 平台差异代码用条件编译隔离
+
+## 状态管理
+- Pinia Setup Store 语法
+- 按领域拆分 stores/
+
+## UI 库
+- uView Plus (`uview-plus`) 主要 UI 库
+- Uni UI 补充
+
+## 后端通信
+- 封装 `uni.request` 为统一 request 函数
+- 拦截器处理 Token 和错误

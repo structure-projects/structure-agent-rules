@@ -1,0 +1,55 @@
+---
+description: Gin 生态开发约束。编写 Go 代码时始终生效。
+globs:
+  - "**/*.go"
+  - "**/go.mod"
+  - "**/Makefile"
+alwaysApply: true
+---
+
+# Gin 开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；DTO 校验见 `prompts/validation.md`；API 文档见 `prompts/swagger.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- Go 版本 MUST >= 1.21，`go.mod` 管理依赖
+- 包名 MUST 全部小写、单数、无下划线、无驼峰
+- 导出符号 MUST 有文档注释
+- 错误 MUST 被处理（`errcheck` 零容忍）
+
+## 分层约束
+- **Handler 层**：只做绑定参数 → 调用 service → 渲染响应。禁止写业务逻辑、直接操作 DB
+- **Service 层**：接口定义 + 实现分离，使用 `context.Context` 第一参数，禁止引用 `gin.Context`
+- **Repository 层**：接口在 `repository/` 包，GORM 实现在子包，将 `gorm.ErrRecordNotFound` 映射为业务错误
+
+## 关键优先级（顺序不可乱）
+- **依赖注入**：构造器注入（`NewXxx(dep) *Xxx`）→ Wire 编译时生成 → 禁止全局变量
+- **错误处理**：哨兵错误（`var ErrNotFound = errors.New(...)`）→ `AppError` 结构体 → `fmt.Errorf("...: %w", err)` 包装
+- **JSON**：使用 `encoding/json`（标准库），禁止混用第三方 JSON 库
+
+## 持久化
+- Repository 接口定义在 `repository/` 包，实现在 `repository/gorm/` 子包
+- **MUST** 使用 `db.WithContext(ctx)` 传递上下文
+- **MUST** 生产环境使用版本化迁移（`golang-migrate`），**禁止** `AutoMigrate`
+- **MUST** 显式设置连接池参数：MaxOpenConns、MaxIdleConns、ConnMaxLifetime
+
+## 异常与响应
+- **MUST** 在 `model/errors.go` 统一定义哨兵错误
+- **MUST** handler 层捕获所有错误，转换为 HTTP 状态码
+- **SHOULD** 定义 `AppError` 结构体，携带业务错误码
+- **禁止** 使用 `panic` 处理请求级业务错误
+- **禁止** 返回裸 `errors.New("...")`，应使用预定义错误
+
+## API 出入参
+- DTO/VO/Query，兼容 CQRS
+- 分页签名统一：`List(ctx, query, page, pageSize)`
+- CRUD 命名统一：`Create` / `Update` / `Delete` / `GetByID` / `List`
+
+## 测试工作流（MUST）
+- 每开发一个功能 **立即** 写单元测试，**单测通过才能做下一个功能**
+- 功能有修改时 **同步修改测试** 并通过
+- 业务完成后写 **业务流程集成测试**，通过才算交付
+- **提交前**：`go test -race ./...` 全部通过 + `go build ./cmd/server` 编译通过
+- **禁止** 测试/编译失败仍提交
+
+详细规则（含提交前自检清单）请读 `prompts/developer.md`。

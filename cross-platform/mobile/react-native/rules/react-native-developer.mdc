@@ -1,0 +1,51 @@
+---
+description: React Native 开发约束。编写 TSX/TS 代码时始终生效。
+globs:
+  - "**/*.tsx"
+  - "**/*.ts"
+  - "**/app.json"
+  - "**/package.json"
+  - "**/babel.config.js"
+alwaysApply: true
+---
+
+# React Native 开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- **MUST** RN 0.73+ + TypeScript strict + New Architecture
+- **MUST** React Navigation 6.x（Native Stack Navigator）
+- **MUST** TanStack Query + Zustand
+- **MUST** Hermes 引擎（生产）
+- **MUST** StyleSheet.create() 或 NativeWind
+
+## 编码规范
+- **MUST** 函数组件 + TypeScript interface Props
+- **MUST** API 调用封装在 Custom Hook 中
+- **MUST** 回调使用 useCallback
+- **禁止** `any` 类型
+- **禁止** 内联样式对象
+
+## 导航
+- **MUST** createNativeStackNavigator
+- **MUST** 类型安全导航参数
+- **MUST** NavigationContainer 包裹根导航器
+
+## 性能
+- **MUST** FlatList（非 ScrollView + map）
+- **MUST** FastImage 远程图片
+- **MUST** Reanimated 动画
+
+## 安全
+- **MUST** SecureStore / Keychain 存储敏感数据
+- **MUST** HTTPS 强制
+
+## 测试工作流（MUST）
+- 每开发功能立即写单测（Jest + RNTL），通过才能做下一个
+- 功能修改时同步改测试
+- 核心流程写 E2E（Detox）
+- 提交前 `npm run test` + `npm run lint` + `npx tsc --noEmit` 全通过
+- **禁止** 测试/Lint/类型检查失败仍提交
+
+详细规则请读 `prompts/developer.md`。

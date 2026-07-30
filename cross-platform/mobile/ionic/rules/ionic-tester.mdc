@@ -1,0 +1,56 @@
+---
+description: Ionic 测试规则。编写测试代码时触发。
+globs:
+  - "**/*.spec.ts"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/test/**"
+  - "**/__tests__/**"
+  - "**/e2e/**"
+alwaysApply: false
+---
+
+# Ionic 测试规则
+
+> 完整见 `prompts/tester.md`
+
+## 测试分层
+| 层 | 工具 | 说明 |
+|---|---|---|
+| 单元测试 | Jasmine/Karma（Angular）、Jest（React/Vue） | Service、Provider、Utils |
+| 组件测试 | Jasmine + `@ionic/angular-test`（Angular）、Testing Library（React/Vue） | Ionic 组件渲染 |
+| E2E | Cypress 或 Playwright | 完整用户流程 |
+
+## 测试工作流（MUST）
+- 每功能开发后立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 核心 Service 写单元测试
+- 核心页面写组件测试
+- 核心流程写 E2E
+- 提交前 `npm run test` + `npm run lint` 全通过
+- **禁止** 测试/Lint 失败仍提交
+
+## 命名
+- 单元测试：`{target}.spec.ts`（Angular）或 `{target}.test.ts`（React/Vue）
+- 组件测试：`{component}.spec.ts`（Angular）或 `{component}.test.tsx`（React）
+- E2E：`{feature}.e2e.ts` → `e2e/` 目录
+
+## Angular 测试关键规范
+- Service 测试使用 `TestBed` + `HttpClientTestingModule`
+- 组件测试使用 `IonicModule.forRoot()` + `RouterTestingModule`
+- `@ionic/angular-test` 提供 `ion-button`、`ion-input` 等组件的测试支持
+
+## React 测试关键规范
+- 使用 `@testing-library/react` + `@testing-library/jest-dom`
+- 组件测试包裹在 `IonApp` 和 `IonReactRouter` 中
+- Mock Capacitor 插件（`jest.mock('@capacitor/camera')`）
+
+## Vue 测试关键规范
+- 使用 `@vue/test-utils` + `@ionic/vue`
+- 组件挂载需引入 `IonicVue` 插件
+- Mock Capacitor 插件
+
+## E2E 测试关键规范
+- **MUST** 使用 `data-testid` 属性定位关键元素
+- **MUST** 等待 Ionic 动画完成后再断言
+- **SHOULD** 多平台截图对比（Percy 或 Chromatic）

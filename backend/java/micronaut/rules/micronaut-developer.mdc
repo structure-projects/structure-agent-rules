@@ -1,0 +1,124 @@
+---
+description: Micronaut 开发约束
+globs: **/*.java,**/build.gradle*,**/build.gradle.kts
+alwaysApply: true
+---
+
+# Micronaut 开发约束
+
+> 本规则适用于所有 Micronaut 4.x 项目。核心开发规范详见 `prompts/developer.md`。
+
+## 语言与 JDK
+
+- 仅使用 Java（JDK 17+），**不使用** Kotlin
+- 推荐使用 Gradle（Kotlin DSL）构建
+
+## 核心原则（MUST）
+
+### 1. 编译时 DI（AOT）
+
+Micronaut 所有依赖注入在编译时完成，**禁止**使用反射注入：
+
+```java
+// ✅ 正确：构造器注入（AOT 兼容）
+@Singleton
+public class UserService {
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+}
+
+// ❌ 错误：字段注入（不兼容 AOT）
+@Singleton
+public class UserService {
+    @Inject
+    private UserRepository userRepository;
+}
+```
+
+### 2. HTTP 客户端（声明式 `@Client`）
+
+Micronaut 内置声明式 HTTP 客户端，**不使用** Feign：
+
+```java
+@Client("http://user-service")
+public interface UserClient {
+    @Get("/api/v1/users/{id}")
+    UserVO findById(Long id);
+}
+```
+
+### 3. 响应式编程
+
+使用 Project Reactor（推荐）或 RxJava 3：
+
+```java
+@Get("/api/v1/users")
+Mono<List<UserVO>> list();    // Project Reactor
+```
+
+### 4. Controller 规范
+
+```java
+@Controller("/api/v1/users")
+public class UserController {
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @Post
+    public HttpResponse<UserVO> create(@Body @Valid CreateUserDTO dto) {
+        return HttpResponse.created(userService.create(dto));
+    }
+
+    @Get("/{id}")
+    public HttpResponse<UserVO> findById(@PathVariable Long id) {
+        return HttpResponse.ok(userService.findById(id));
+    }
+
+    @Put("/{id}")
+    public HttpResponse<Void> update(@PathVariable Long id, @Body @Valid UpdateUserDTO dto) {
+        userService.update(id, dto);
+        return HttpResponse.noContent();
+    }
+
+    @Delete("/{id}")
+    public HttpResponse<Void> delete(@PathVariable Long id) {
+        userService.delete(id);
+        return HttpResponse.noContent();
+    }
+}
+```
+
+## 检查清单（Commit 前必须）
+
+- [ ] 所有 Bean 使用构造器注入（`private final` 字段）
+- [ ] 对外 HTTP 调用使用 `@Client` 声明式接口
+- [ ] 校验注解使用 `jakarta.validation`（非 `javax.validation`）
+- [ ] 测试类使用 `@MicronautTest`，Mock 使用 `@MockBean`
+- [ ] 配置文件使用 `@ConfigurationProperties` 或 `@Property`
+- [ ] 响应式方法返回 `Mono<T>` / `Flowable<T>` 或 `HttpResponse<T>`
+- [ ] 未引入 Spring 框架依赖（避免冲突）
+
+## 安全要求（MUST）
+
+- 所有 API 端点 MUST 声明安全注解（`@Secured`）
+- 敏感配置（密码、密钥）MUST 使用环境变量或加密存储
+- 生产环境 MUST 关闭 Swagger/OpenAPI 端点
+
+## 详细规范
+
+各专项规范见对应的 prompts 文件：
+- [开发规范](prompts/developer.md) — 完整开发约束
+- [架构设计](prompts/architect.md) — DDD 分层与模块划分
+- [代码评审](prompts/reviewer.md) — 评审检查清单
+- [测试规范](prompts/tester.md) — 单元测试与集成测试
+- [组件用法](prompts/components.md) — Micronaut 核心组件
+- [项目搭建](prompts/project-scaffolding.md) — 脚手架与初始化
+- [API 文档](prompts/swagger.md) — OpenAPI 文档生成
+- [参数校验](prompts/validation.md) — Bean Validation 规范
+- [CI/CD](prompts/ci-cd.md) — 持续集成与部署

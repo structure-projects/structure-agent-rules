@@ -1,0 +1,104 @@
+---
+description: Micronaut 架构与设计约束
+globs: **/*.java,**/build.gradle*,**/build.gradle.kts
+alwaysApply: false
+---
+
+# Micronaut 架构与设计约束
+
+> 本规则适用于 Micronaut 4.x 项目的架构设计评审。详细架构规范见 `prompts/architect.md`。
+
+## DDD 分层架构（MUST）
+
+```
+api/          → @Controller，HTTP 接入层，仅做参数校验和协议转换
+domain/       → 领域模型，Entity / ValueObject / DomainService
+application/  → 应用服务，编排领域服务，事务边界
+infrastructure/ → 基础设施，Repository 实现，外部系统集成
+```
+
+## 模块划分
+
+每个模块 MUST 有独立的 `build.gradle.kts`：
+
+```
+user-module/
+├── user-api/           → Controller + DTO
+├── user-domain/        → Entity + Repository 接口
+├── user-application/   → ApplicationService
+└── user-infrastructure/ → Repository 实现 + 外部 Client
+```
+
+## 关键架构决策（MUST）
+
+### 1. 构造器注入（AOT 强制要求）
+
+```java
+@Singleton
+public class OrderApplicationService {
+    private final OrderRepository orderRepository;
+    private final UserClient userClient;
+    private final EventPublisher eventPublisher;
+
+    public OrderApplicationService(
+            OrderRepository orderRepository,
+            UserClient userClient,
+            EventPublisher eventPublisher) {
+        this.orderRepository = orderRepository;
+        this.userClient = userClient;
+        this.eventPublisher = eventPublisher;
+    }
+}
+```
+
+### 2. Repository 模式
+
+Micronaut Data 支持 JPA 和 JDBC 两种 Repository 风格：
+
+```java
+// JPA 风格
+@JpaRepository
+public interface UserRepository extends CrudRepository<User, Long> {
+    Optional<User> findByEmail(String email);
+}
+
+// JDBC 风格（编译时生成 SQL）
+@JdbcRepository
+public interface UserRepository extends CrudRepository<User, Long> {
+    @Query("SELECT * FROM users WHERE email = :email")
+    Optional<User> findByEmail(String email);
+}
+```
+
+### 3. 事件驱动（ApplicationEvent）
+
+```java
+// 发布事件
+eventPublisher.publishEvent(new OrderCreatedEvent(order));
+
+// 监听事件（同步或异步）
+@EventListener
+public void onOrderCreated(OrderCreatedEvent event) {
+    // 处理逻辑
+}
+```
+
+### 4. Filter 链
+
+```java
+@Filter("/api/**")
+public class AuthFilter extends OncePerRequestHttpServerFilter {
+    // JWT 校验逻辑
+}
+```
+
+## 设计检查清单
+
+- [ ] 是否采用 DDD 四层分层？（api / domain / application / infrastructure）
+- [ ] 所有 Bean 是否使用构造器注入？
+- [ ] 是否使用 Micronaut Data 而非 Spring Data JPA？
+- [ ] 服务间调用是否使用声明式 `@Client`？
+- [ ] 事务边界是否在 Application 层？
+- [ ] 是否避免引入 Spring 框架依赖？
+
+详见 [架构设计 prompt](prompts/architect.md)。

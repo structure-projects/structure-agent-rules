@@ -1,0 +1,52 @@
+---
+description: React 前端开发约束。编写 React/TS/CSS 代码时始终生效。
+globs:
+  - "**/*.tsx"
+  - "**/*.ts"
+  - "**/*.css"
+  - "**/package.json"
+  - "**/vite.config.ts"
+alwaysApply: true
+---
+
+# React 前端开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- **MUST** React 18+ + TypeScript strict + Vite
+- **MUST** Functional Components + Hooks（**禁止** Class Component）
+- **MUST** ESLint + Prettier
+
+## 组件
+- **MUST** 文件名 PascalCase（`UserTable.tsx`）
+- **MUST** Props 通过 `interface` 声明完整类型
+- **MUST** 事件回调以 `on` 前缀命名
+
+## 状态管理
+- 服务端数据 → TanStack Query（React Query）
+- 客户端全局状态 → Zustand（轻量）/ Redux Toolkit（复杂）
+- 组件局部状态 → useState / useReducer
+
+## Hooks
+- **MUST** `useEffect` 有正确依赖数组和清理函数
+- **MUST** 可复用逻辑提取到 `hooks/useXxx.ts`
+- **禁止** 在条件/循环中调用 Hook
+
+## 请求
+- **MUST** API 请求封装到 `api/` 目录
+- **MUST** 统一 HTTP client（axios 封装）
+- **MUST** 请求/响应类型声明完整
+
+## 样式
+- **MUST** Tailwind CSS 或 CSS Modules
+- **禁止** 内联 style
+
+## 测试工作流（MUST）
+- 每开发功能立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 业务完成后写 E2E（Playwright）
+- 提交前 `npm run test` + `npm run lint` + `npm run build` 全通过
+- **禁止** 测试/编译失败仍提交
+
+详细规则请读 `prompts/developer.md`。

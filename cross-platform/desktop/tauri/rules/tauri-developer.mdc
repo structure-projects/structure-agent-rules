@@ -1,0 +1,135 @@
+---
+description: Tauri 开发约束
+globs: "**/*.rs,**/tauri.conf.json,**/Cargo.toml,**/src-tauri/**/*,**/*.ts,**/*.tsx,**/*.vue,**/*.svelte"
+alwaysApply: true
+---
+
+# Tauri 开发约束
+
+> 本规则适用于所有 Tauri 2.x 桌面应用项目。核心开发规范详见 `prompts/developer.md`。
+
+## 技术架构
+
+Tauri 采用双层架构：
+- **Rust Core** (`src-tauri/`): 后端逻辑、系统调用、文件操作
+- **Frontend** (React/Vue/Svelte 等): UI 渲染层
+
+## 核心原则（MUST）
+
+### 1. IPC 通信
+
+前端 ↔ Rust 通过 IPC 通信，使用 `invoke` / `emit`：
+
+```rust
+// Rust 端 — 定义 Command
+#[tauri::command]
+async fn get_user(id: i64) -> Result<User, String> {
+    Ok(query_user(id).await.map_err(|e| e.to_string())?)
+}
+
+// main.rs — 注册 Command
+tauri::Builder::default()
+    .invoke_handler(tauri::generate_handler![get_user])
+    .run(tauri::generate_context!())
+    .expect("error while running tauri application");
+```
+
+```typescript
+// 前端端 — 调用 Rust Command
+import { invoke } from '@tauri-apps/api/core';
+
+const user = await invoke<User>('get_user', { id: 1 });
+```
+
+### 2. 前端框架选择
+
+支持任意前端框架，推荐：
+- React + TypeScript (Vite)
+- Vue 3 + Composition API (Vite)
+- Svelte + TypeScript (Vite)
+
+```typescript
+// React 示例
+import { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+
+function App() {
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    invoke<User[]>('list_users').then(setUsers);
+  }, []);
+
+  return <UserList users={users} />;
+}
+```
+
+### 3. 文件系统访问
+
+```rust
+// Rust 端文件操作（受权限控制）
+use std::fs;
+
+#[tauri::command]
+fn read_config(path: String) -> Result<String, String> {
+    fs::read_to_string(&path).map_err(|e| e.to_string())
+}
+```
+
+```json
+// tauri.conf.json — 必需声明权限
+{
+  "plugins": {
+    "fs": {
+      "scope": {
+        "allow": ["$APPDATA/**"],
+        "deny": ["**/secret/**"]
+      }
+    }
+  }
+}
+```
+
+### 4. 窗口管理
+
+```rust
+use tauri::Manager;
+
+// 创建新窗口
+app.get_webview_window("main").unwrap().eval("location.reload()")?;
+
+// 监听窗口事件
+window.on_window_event(|event| match event {
+    WindowEvent::CloseRequested { .. } => { /* 保存状态 */ }
+    _ => {}
+});
+```
+
+### 5. 安全要求（MUST）
+
+- [ ] CSP 在 `tauri.conf.json` 中严格配置
+- [ ] 文件系统访问限制 `scope`（最小权限原则）
+- [ ] 不使用 `dangerousRemoteDomainIpcAccess`
+- [ ] Command 参数 MUST 验证（禁止盲信前端输入）
+- [ ] Shell 插件执行命令白名单
+
+## 检查清单（Commit 前必须）
+
+- [ ] Rust Command 参数已校验
+- [ ] `tauri.conf.json` 中 CSP 配置正确
+- [ ] 文件系统 Scope 最小化
+- [ ] 前端不直接操作文件系统（通过 IPC）
+- [ ] 窗口关闭前数据已持久化（监听 `CloseRequested`）
+- [ ] `contextBridge` / IPC 调用已错误处理
+- [ ] 构建目标平台测试通过
+
+## 详细规范
+
+各专项规范见对应的 prompts 文件：
+- [开发规范](prompts/developer.md) — 完整开发约束
+- [架构设计](prompts/architect.md) — 双层架构设计
+- [代码评审](prompts/reviewer.md) — 评审检查清单
+- [测试规范](prompts/tester.md) — 单元测试与集成测试
+- [组件用法](prompts/components.md) — Tauri 核心 API 与插件
+- [项目搭建](prompts/project-scaffolding.md) — 项目初始化
+- [CI/CD](prompts/ci-cd.md) — 桌面应用构建与分发

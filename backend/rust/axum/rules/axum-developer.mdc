@@ -1,0 +1,54 @@
+---
+description: Axum 生态开发约束。编写 Rust 代码时始终生效。
+globs:
+  - "**/*.rs"
+  - "**/Cargo.toml"
+alwaysApply: true
+---
+
+# Axum 开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；DTO 校验见 `prompts/validation.md`；API 文档见 `prompts/swagger.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- Rust 版本 MUST >= 1.75（推荐 1.80+），使用 `Cargo.toml` 管理依赖
+- 模块名 MUST 使用 `snake_case`
+- 公共 API MUST 有文档注释（`///`）
+- 错误 MUST 被处理（禁止 `unwrap()` / `expect()` 用于请求级错误），禁止 `let _ =` 吞错误
+- `unsafe` 代码 MUST 有注释说明安全性，**禁止**滥用 `unsafe`
+
+## 分层约束
+- **Handler 层（`routes/`）**：只做提取参数 → 调用 service → 构建响应。禁止写业务逻辑、直接操作数据库
+- **Service 层（`services/`）**：业务逻辑实现，使用 `async fn`，返回 `Result<T, AppError>`，禁止引用 `axum::extract` 类型
+- **Repository 层（`repositories/`）**：接口 trait 定义与实现分离，将数据库错误映射为业务错误
+
+## 关键优先级（顺序不可乱）
+- **错误处理**：`thiserror` 定义错误枚举 → `IntoResponse` 实现统一转换 → 禁止 `unwrap()` 处理业务错误
+- **依赖注入**：`AppState`（`axum::extract::State`）共享状态 → 构造器注入 → 禁止全局静态变量持有依赖
+- **异步运行时**：使用 `tokio`，禁止混用 `async-std` 或 `smol`
+
+## 持久化
+- **MUST** 使用 `sqlx`（异步、编译时 SQL 校验）或 `sea-orm`
+- **MUST** 通过 `sqlx::query_as!` / `sqlx::query!` 宏做编译时 SQL 校验
+- **MUST** 显式设置连接池参数：`max_connections`、`min_connections`、`acquire_timeout`
+- **禁止** 在 Service/Handler 中直接使用 `sqlx::Pool`，必须通过 Repository 层
+
+## 异常与响应
+- **MUST** 使用 `thiserror` 定义统一错误类型 `AppError`
+- **MUST** 为 `AppError` 实现 `IntoResponse` trait，统一转换为 HTTP 响应
+- **MUST** handler 返回 `Result<impl IntoResponse, AppError>`
+- **禁止** 在 handler 中 `panic!` / `unwrap()` 处理业务错误
+
+## API 出入参
+- DTO / VO / Query 用 `serde` 的 `Deserialize` / `Serialize`
+- 分页签名统一：`async fn list(state, query, page, page_size) -> Result<PageResult<T>, AppError>`
+- CRUD 命名统一：`create` / `update` / `delete` / `get_by_id` / `list`
+
+## 测试工作流（MUST）
+- 每开发一个功能 **立即** 写单元测试，**单测通过才能做下一个功能**
+- 功能有修改时 **同步修改测试** 并通过
+- 业务完成后写 **业务流程集成测试**，通过才算交付
+- **提交前**：`cargo test` 全部通过 + `cargo build --release` 编译通过
+- **禁止** 测试/编译失败仍提交
+
+详细规则（含提交前自检清单）请读 `prompts/developer.md`。

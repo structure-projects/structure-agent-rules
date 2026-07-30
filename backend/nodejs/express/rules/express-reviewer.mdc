@@ -1,0 +1,39 @@
+---
+description: Express 生态评审约束。审查 PR / diff / 设计文档时生效。
+globs:
+  - "**/*.md"
+alwaysApply: false
+---
+
+# Express 评审规则
+
+完整规范见 `prompts/reviewer.md`。以下为关键内联规则：
+
+## 评审顺序
+1. 中间件顺序 → 2. Controller 职责 → 3. Service 逻辑 → 4. 路由组织 → 5. 错误处理 → 6. 校验 → 7. 配置 → 8. 数据访问 → 9. 安全 → 10. 测试
+
+## 硬性驳回项
+- 错误处理中间件未使用 4-arg 签名或未放最后
+- 中间件顺序错误
+- Controller 包含业务逻辑或直接使用 Model
+- Service 直接操作 req/res 对象
+- 路由未使用 express.Router() 模块化
+- Controller 中直接 res.status().json() 而非 next(err)
+- 未注册全局 4-arg 错误处理中间件
+- 入参未校验
+- 硬编码配置值/密钥
+- 未启用 helmet / cors 白名单 / rate-limit
+- 生产环境 sync() / autoIndex
+- 新功能无单测；改功能未同步测试；僵尸断言
+- 测试失败仍提交
+
+## 建议性反馈
+- 使用 var 而非 const/let
+- 回调风格而非 async/await
+- Controller 方法过多
+- 使用 console.log 而非日志库
+
+## 反馈格式
+位置（file:line）、级别（MUST-FIX / SHOULD-FIX / NIT / QUESTION）、依据、建议。
+
+详细规则请读 `prompts/reviewer.md`。

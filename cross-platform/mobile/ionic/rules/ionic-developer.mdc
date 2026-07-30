@@ -1,0 +1,62 @@
+---
+description: Ionic 开发约束。编写 TypeScript/HTML/SCSS 代码时始终生效。
+globs:
+  - "**/*.ts"
+  - "**/*.html"
+  - "**/*.scss"
+  - "**/*.tsx"
+  - "**/*.jsx"
+  - "**/ionic.config.json"
+  - "**/capacitor.config.ts"
+alwaysApply: true
+---
+
+# Ionic 开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- **MUST** Ionic 7+ + Capacitor 5+（非 Cordova）
+- **MUST** TypeScript strict + Angular（推荐）/React/Vue
+- **MUST** 使用 Ionic 组件（`ion-button`、`ion-list`、`ion-card` 等），禁止裸 HTML 元素做 UI
+- **MUST** Capacitor 插件访问原生能力（Camera、Filesystem、Storage 等）
+- **MUST** `@capacitor/preferences` 或 `@ionic/storage` 存储键值数据
+
+## 编码规范
+- **MUST** 使用 Ionic 组件替代原生 HTML（`<ion-input>` 而非 `<input>`，`<ion-list>` 而非 `<ul>`）
+- **MUST** SCSS 变量定制主题（`--ion-color-primary` 等）
+- **MUST** Platform 服务检测平台（`is('ios')`、`is('android')`）
+- **MUST** 响应式栅格使用 `<ion-grid>` + `<ion-row>` + `<ion-col>`
+- **MUST** 模态框使用 `ModalController`（Angular）/ `useIonModal`（React）/ `ion-modal`（Vue）
+- **禁止** 直接操作 DOM（使用 Ionic 指令和组件）
+
+## 导航
+- Angular: Angular Router + `IonRouterOutlet`
+- React: React Router + `IonReactRouter` + `IonRouterOutlet`
+- Vue: Vue Router + `IonRouterOutlet`
+- **MUST** 使用 Ionic 的 `<ion-tabs>` + `<ion-tab-bar>` 实现 Tab 导航
+
+## 平台适配
+- **MUST** 使用 `Platform` 服务检测运行平台
+- **MUST** 使用 `ion-split-pane` 实现平板/桌面端双栏布局
+- **SHOULD** 为 iOS 和 Android 定制不同 UI（`ios` / `md` mode）
+
+## 性能
+- **MUST** `ion-virtual-scroll` 处理长列表（非 scroll + ngFor/map）
+- **MUST** 懒加载页面模块（Angular）/ 动态导入（React/Vue）
+- **SHOULD** 启用 PWA 支持（`@angular/pwa` 或 workbox）
+
+## 安全
+- **MUST** HTTPS 强制
+- **MUST** 敏感数据使用 `@capacitor/preferences`（带加密）或 Secure Storage 插件
+- **禁止** 硬编码 API 密钥
+- **SHOULD** CSP（Content Security Policy）配置
+
+## 测试工作流（MUST）
+- 每开发功能立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 核心流程写 E2E（Cypress 或 Playwright）
+- 提交前 `npm run test` + `npm run lint` + `npx tsc --noEmit` 全通过
+- **禁止** 测试/Lint/类型检查失败仍提交
+
+详细规则请读 `prompts/developer.md`。

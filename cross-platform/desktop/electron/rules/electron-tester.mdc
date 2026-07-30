@@ -1,0 +1,133 @@
+---
+description: Electron 测试规则。编写测试代码时触发。
+globs:
+  - "**/*.spec.ts"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/test/**"
+  - "**/__tests__/**"
+  - "**/e2e/**"
+alwaysApply: false
+---
+
+# Electron 测试规则
+
+> 完整见 `prompts/tester.md`
+
+## 测试分层
+
+| 层 | 工具 | 说明 |
+|---|---|---|
+| 主进程单元测试 | Jest | Main Process 模块、IPC Handler |
+| 渲染进程单元测试 | Jest / Vitest | Hooks、Utils |
+| 渲染进程组件测试 | Testing Library | 组件渲染与交互 |
+| E2E | Playwright + `electron` | 完整桌面流程 |
+
+## 测试工作流（MUST）
+- 每开发功能立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 主进程 IPC Handler 写单元测试
+- 渲染进程组件写组件测试
+- 核心 IPC 流程写集成测试
+- 核心流程写 E2E（Playwright + Electron）
+- 提交前 `npm run test` + `npm run lint` + `npx tsc --noEmit` 全通过
+- **禁止** 测试/Lint/类型检查失败仍提交
+
+## 主进程测试
+
+```typescript
+import { ipcMain } from 'electron';
+import { handleGreet } from './handlers/greet';
+
+describe('IPC Handler: greet', () => {
+  it('should return greeting', async () => {
+    const result = await handleGreet('World');
+    expect(result).toBe('Hello, World!');
+  });
+
+  it('should reject empty name', async () => {
+    await expect(handleGreet('')).rejects.toThrow('名称不能为空');
+  });
+});
+```
+
+- **MUST** 主进程测试 Mock Electron 原生模块
+- **MUST** 测试 IPC Handler 的输入验证和错误处理
+
+## Preload 测试
+
+```typescript
+describe('Preload API', () => {
+  it('should expose only allowed APIs', () => {
+    const api = {
+      greet: jest.fn(),
+      saveFile: jest.fn(),
+    };
+    expect(api).not.toHaveProperty('fs');
+    expect(api).not.toHaveProperty('child_process');
+    expect(api).not.toHaveProperty('ipcRenderer');
+  });
+});
+```
+
+- **MUST** 验证 preload 暴露的 API 是最小化的
+
+## 渲染进程测试
+
+```tsx
+// React 示例
+import { render, screen, fireEvent } from '@testing-library/react';
+import { App } from './App';
+
+beforeAll(() => {
+  (window as any).electronAPI = {
+    greet: jest.fn().mockResolvedValue('Hello, World!'),
+  };
+});
+
+describe('App', () => {
+  it('should greet on button click', async () => {
+    render(<App />);
+    fireEvent.click(screen.getByText('打招呼'));
+    expect(await screen.findByText('Hello, World!')).toBeInTheDocument();
+  });
+});
+```
+
+- **MUST** Mock `window.electronAPI` 在测试中
+- **MUST** 使用 Testing Library 测试用户交互
+
+## E2E 测试（Playwright + Electron）
+
+```typescript
+import { test, expect, _electron as electron } from '@playwright/test';
+
+test('greet flow', async () => {
+  const electronApp = await electron.launch({
+    args: ['.'],
+  });
+
+  const page = await electronApp.firstWindow();
+  await page.waitForSelector('[data-testid="app-ready"]');
+
+  await page.fill('[data-testid="name-input"]', 'World');
+  await page.click('[data-testid="greet-button"]');
+
+  await expect(page.locator('[data-testid="greeting"]')).toContainText('Hello, World!');
+
+  await electronApp.close();
+});
+```
+
+- **MUST** E2E 使用 Playwright 的 `_electron` API
+- **MUST** 使用 `data-testid` 定位元素
+- **MUST** 测试结束后关闭 Electron 应用
+
+## 文件命名
+
+| 类型 | 命名 | 位置 |
+|---|---|---|
+| 主进程单测 | `{name}.test.ts` | 与源文件同目录或 `__tests__/` |
+| 渲染进程单测 | `{name}.test.ts` / `{name}.spec.ts` | 与源文件同目录 |
+| 渲染进程组件测试 | `{component}.test.tsx` | 与源文件同目录 |
+| E2E | `{feature}.e2e.ts` | `e2e/` 或 `tests/e2e/` |

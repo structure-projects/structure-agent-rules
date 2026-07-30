@@ -1,0 +1,37 @@
+---
+description: Angular 前端架构规则。涉及选型、路由、状态管理、DI 时触发。
+globs:
+  - "**/angular.json"
+  - "**/app.config.ts"
+  - "**/app.routes.ts"
+  - "**/app.component.ts"
+alwaysApply: false
+---
+
+# Angular 前端架构规则
+
+> 完整见 `prompts/architect.md`
+
+## 版本与模块化
+- **MUST** Angular 17+ Standalone Components
+- **SHOULD** 新项目默认 Standalone，避免 NgModules
+
+## 项目结构
+- `core/`：单例服务、守卫、拦截器
+- `shared/`：可复用 Component/Directive/Pipe
+- `features/`：业务领域懒加载模块
+
+## 状态管理
+- Signals（组件级）→ RxJS Services（跨组件）→ NgRx（大型应用）
+
+## 路由
+- **MUST** `loadComponent` / `loadChildren` 懒加载
+- **SHOULD** 函数式守卫 `() => inject(Guard)`
+
+## DI
+- `@Injectable({ providedIn: 'root' })` 树摇
+- `inject()` 函数替代构造函数注入
+
+## 构建
+- Angular CLI + TypeScript strict + AOT
+- esbuild 构建器（Angular 17+）

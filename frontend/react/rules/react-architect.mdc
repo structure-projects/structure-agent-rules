@@ -1,0 +1,45 @@
+---
+description: React 前端架构规则。涉及选型、状态管理、路由、构建配置时触发。
+globs:
+  - "**/vite.config.ts"
+  - "**/router/**"
+  - "**/stores/**"
+  - "**/App.tsx"
+  - "**/main.tsx"
+alwaysApply: false
+---
+
+# React 前端架构规则
+
+> 完整见 `prompts/architect.md`
+
+## 技术栈基线
+- React 18+ + TypeScript strict + Vite
+- Functional Components + Hooks only
+
+## 状态管理
+| 场景 | 方案 |
+|---|---|
+| 服务端状态 | TanStack Query (React Query) |
+| 客户端轻量 | Zustand |
+| 客户端复杂 | Redux Toolkit |
+
+## 路由
+- React Router v6（`createBrowserRouter`）
+- 懒加载：`React.lazy(() => import(...))` + `Suspense`
+
+## 组件分层
+| 层 | 定位 |
+|---|---|
+| L1 | `components/ui/` 通用 UI 组件 |
+| L2 | `components/business/` 领域业务组件 |
+| L3 | `pages/` 页面组件 |
+
+## 样式
+- Tailwind CSS 或 CSS Modules
+- 禁止 inline styles
+
+## 构建
+- Vite + `@vitejs/plugin-react`
+- TypeScript strict mode
+- `vite-tsconfig-paths` 路径别名

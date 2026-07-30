@@ -1,0 +1,39 @@
+---
+description: Koa 生态评审约束。审查 PR / diff / 设计文档时生效。
+globs:
+  - "**/*.md"
+alwaysApply: false
+---
+
+# Koa 评审规则
+
+完整规范见 `prompts/reviewer.md`。以下为关键内联规则：
+
+## 评审顺序
+1. 中间件顺序 → 2. Controller 职责 → 3. Service 逻辑 → 4. 路由组织 → 5. 错误处理 → 6. 校验 → 7. 配置 → 8. 数据访问 → 9. 安全 → 10. 测试
+
+## 硬性驳回项
+- 错误处理中间件未放最外层
+- 中间件忘记 `await next()`
+- 中间件顺序错误（Body Parser 在 Auth 之后）
+- Controller 包含业务逻辑或直接使用 Model
+- Service 直接操作 `ctx`
+- 路由未使用 koa-router 模块化
+- 未注册全局错误处理中间件
+- 入参未校验
+- 硬编码配置值/密钥
+- CORS 使用 `*` 通配符
+- 生产环境 Sequelize `sync()`
+- 新功能无单测；改功能未同步测试；僵尸断言
+- 测试失败仍提交
+
+## 建议性反馈
+- 使用 `var` 而非 `const`/`let`
+- 回调风格而非 `async/await`
+- Controller 方法过多
+- 使用 `console.log` 而非日志库
+
+## 反馈格式
+每条反馈含：位置（`file:line`）、级别（MUST-FIX / SHOULD-FIX / NIT / QUESTION）、依据、建议。
+
+详细规则请读 `prompts/reviewer.md`。

@@ -1,0 +1,33 @@
+---
+description: iOS 原生架构规则。涉及 MVVM、SwiftUI、导航、数据层等架构选型时触发。
+globs:
+  - "**/*.xcodeproj/**"
+  - "**/Package.swift"
+  - "**/App/**"
+  - "**/Domain/**"
+alwaysApply: false
+---
+
+# iOS 原生架构规则
+
+> 完整见 `prompts/architect.md`
+
+## 架构模式
+- **MUST** MVVM 架构，ViewModel `@MainActor` + `@Observable`
+- **MUST** Repository 封装数据源
+- **MUST** 构造函数注入依赖
+
+## UI 架构
+- **MUST** SwiftUI（iOS 16+），UIKit 仅互操作
+- **MUST** `NavigationStack` 导航
+- **MUST** `AsyncImage` 远程图片
+
+## 数据层
+- Core Data / SwiftData（结构化）+ Keychain（敏感数据）
+- URLSession async/await 网络
+- Repository Protocol 定义接口
+
+## 构建
+- Xcode + SPM 依赖管理
+- `.xcconfig` 环境配置
+- SwiftLint 代码风格

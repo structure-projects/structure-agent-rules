@@ -1,0 +1,56 @@
+---
+description: Next.js 前端架构规则。涉及 App Router、渲染策略、数据库选型时触发。
+globs:
+  - "**/next.config.*"
+  - "**/middleware.ts"
+  - "**/app/layout.tsx"
+  - "**/app/**/route.ts"
+  - "**/prisma/schema.prisma"
+alwaysApply: false
+---
+
+# Next.js 前端架构规则
+
+> 完整见 `prompts/architect.md`
+
+## 渲染策略
+| 策略 | 场景 | 实现 |
+|---|---|---|
+| SSR | 动态页面 | 默认 |
+| SSG | 静态内容 | `generateStaticParams` |
+| ISR | 不频繁变化 | `revalidate` 选项 |
+| CSR | 强交互后台 | `'use client'` + 客户端获取 |
+
+## App Router 架构
+```
+app/
+├── layout.tsx         # 根布局
+├── loading.tsx        # 全局加载态
+├── error.tsx          # 全局错误边界
+├── (marketing)/       # 路由组
+├── (dashboard)/       # 需认证路由组
+└── api/               # Route Handlers
+```
+
+## Server vs Client
+- Server Component 为默认
+- Client Component 尽可能为叶子节点
+- Server Component 中直接访问 DB
+
+## API 层
+- Route Handlers（REST）或 tRPC（类型安全）
+- Server Actions 用于表单提交
+- Zod 共享校验
+
+## 数据库
+- Prisma 或 Drizzle ORM
+- Prisma Client 单例模式
+- Vercel Postgres / PlanetScale
+
+## 认证
+- next-auth (Auth.js)
+- Middleware 保护路由
+
+## 优化
+- `next/image` 图片优化
+- `next/font` 字体优化

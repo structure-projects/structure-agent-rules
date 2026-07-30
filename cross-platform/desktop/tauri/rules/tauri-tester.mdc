@@ -1,0 +1,80 @@
+---
+description: Tauri 测试约束
+globs: "**/tests/**/*.rs,**/*_test.rs,**/src-tauri/src/**/*.rs,**/*.test.ts,**/*.spec.ts"
+alwaysApply: false
+---
+
+# Tauri 测试规范
+
+> 详细测试规范见 `prompts/tester.md`。
+
+## 双重测试策略
+
+**Rust 端**：
+- 单元测试：`#[cfg(test)]` + `#[test]` / `#[tokio::test]`
+- Command 测试：调用 Command 函数断言返回值
+
+**前端端**：
+- 组件测试：Vitest (React/Vue/Svelte)
+- E2E 测试：Playwright + `tauri-driver`
+
+## Rust 测试
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_get_user_command() {
+        let result = get_user(1).await;
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().name, "test");
+    }
+}
+```
+
+## 前端测试
+
+```typescript
+import { describe, it, expect, vi } from 'vitest';
+import { invoke } from '@tauri-apps/api/core';
+
+// Mock Tauri invoke
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: vi.fn()
+}));
+
+describe('UserList', () => {
+  it('renders user list', async () => {
+    vi.mocked(invoke).mockResolvedValue([
+      { id: 1, name: 'alice' }
+    ]);
+    // render component and assert
+  });
+});
+```
+
+## E2E 测试（Playwright）
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test.describe('User CRUD', () => {
+  test('create user', async ({ page }) => {
+    await page.click('[data-testid="add-user"]');
+    await page.fill('[data-testid="name-input"]', 'Test User');
+    await page.click('[data-testid="save-btn"]');
+    await expect(page.locator('[data-testid="user-name"]')).toHaveText('Test User');
+  });
+});
+```
+
+## 检查清单
+
+- [ ] Rust Command 有单元测试
+- [ ] 前端组件有 Vitest 测试
+- [ ] 关键用户流程有 E2E 测试
+- [ ] IPC Mock 正确（使用 `vi.mock('@tauri-apps/api/core')`）
+- [ ] 错误路径有覆盖
+- [ ] 测试数据库与生产数据库隔离

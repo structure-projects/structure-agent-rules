@@ -1,0 +1,38 @@
+---
+description: React Native 测试规则。编写测试代码时触发。
+globs:
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/e2e/**"
+  - "**/jest.config.js"
+alwaysApply: false
+---
+
+# React Native 测试规则
+
+> 完整见 `prompts/tester.md`
+
+## 测试分层
+| 层 | 工具 |
+|---|---|
+| 单元测试 | Jest |
+| 组件测试 | Jest + React Native Testing Library |
+| E2E | Detox |
+
+## 测试工作流（MUST）
+- 每功能开发后立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 核心页面写 RNTL 组件测试
+- 核心流程写 Detox E2E
+- 提交前 `npm run test` + `npm run lint` + `npx tsc --noEmit` 全通过
+- **禁止** 测试/Lint/类型检查失败仍提交
+
+## 命名
+- 单元测试：`{target}.test.ts(x)` → 同目录 `__tests__/`
+- E2E：`{feature}.test.ts` → `e2e/`
+
+## 关键规范
+- Hook 测试 `renderHook` + TanStack Query wrapper
+- 组件测试 `render` + `screen.getByText()`
+- 原生模块 mock（`__mocks__/`）
+- `fireEvent` 模拟交互

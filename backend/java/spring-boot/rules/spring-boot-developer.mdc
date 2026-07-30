@@ -1,0 +1,71 @@
+---
+description: Spring Boot 开发约束。编写 Java 代码时始终生效。
+globs:
+  - "**/*.java"
+  - "**/*.kt"
+  - "**/pom.xml"
+alwaysApply: true
+---
+
+# Spring Boot 开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；DTO 校验见 `prompts/validation.md`；API 文档见 `prompts/swagger.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- Spring Boot 3.x + JDK 17+（`jakarta.*`）
+- 构建工具统一（Maven 或 Gradle）
+- JSON 库项目内统一（Jackson 或 FastJSON），**禁止**混用
+
+## 关键优先级（顺序不可乱）
+- **工具类**：Apache Commons / Guava / Hutool → 项目自定义（限 common/util 层）
+- **Bean 注入**：构造器（推荐 Lombok `@RequiredArgsConstructor`）→ `@Resource` → `@Autowired`（谨慎）
+
+## 分层职责
+- **Controller**：接收请求、参数校验、调用 Service、返回响应。MUST 不包含业务逻辑。
+- **Service**：业务逻辑层。接口与实现分离（`XxxService` + `XxxServiceImpl`）。
+- **Repository**：数据访问层。封装数据库/缓存/外部 API 访问。
+- **禁止** Controller 直接调用 Repository
+- **禁止** Service 层循环依赖
+
+## 持久化
+- JPA：`JpaRepository<T, ID>` + 注意 N+1（`@EntityGraph` 或 JOIN FETCH）
+- MyBatis-Plus：Service 继承 `IService<T>`，ServiceImpl 继承 `ServiceImpl<M, T>`
+- Mapper XML 放在 `resources/mapper/`
+- **禁止** 在 `Service`/`Controller` 注入 `Mapper`（应通过 Repository 封装）
+
+## POJO
+- Entity / DTO / VO / Query 各司其职
+- 所有 POJO MUST 有无参构造
+- 函数参数 SHOULD ≤ 5，超过用包装对象
+- JPA Entity 禁止使用 `@Data`（`equals/hashCode` 可能触发懒加载）
+
+## 异常与响应
+- MUST 使用 `@RestControllerAdvice` + `@ExceptionHandler` 统一处理异常
+- 业务异常定义异常类 + 错误码枚举
+- Controller 返回统一响应体 `Result<T>`
+
+## API 出入参
+- 请求：DTO + Query
+- 响应：VO
+- 分页签名统一：`page({X}Query query, PageQuery pageQuery)`
+- CRUD 命名统一：`create`/`update`/`delete`/`findById`/`page`
+
+## 安全
+- Spring Security 配置使用 SecurityFilterChain（5.7+ 新方式）
+- 密码 MUST `BCryptPasswordEncoder`
+- 禁止 SQL 拼接，MUST 参数化查询
+- 敏感信息（密码、Token）MUST 不打印到日志
+
+## 远程调用
+- **MUST** 服务间调用用 `@FeignClient`（**禁止** `RestTemplate`/`WebClient`）
+- **MUST** 每个 `@FeignClient` 声明 `fallback`/`fallbackFactory`
+- **MUST** 强一致性场景 fallback 抛异常（**禁止** 静默兜底）
+
+## 测试工作流（MUST）
+- 每开发一个功能 **立即** 写单元测试，**单测通过才能做下一个功能**
+- 功能有修改时 **同步修改测试** 并通过
+- 业务完成后写 **业务流程集成测试**（`XxxIT`），通过才算交付
+- **提交前**：`mvn clean test` 全部通过 + `mvn clean package -DskipTests` 编译通过
+- **禁止** 测试/编译失败仍提交
+
+详细规则（含提交前自检清单）请读 `prompts/developer.md`。

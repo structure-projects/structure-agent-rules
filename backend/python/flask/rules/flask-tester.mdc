@@ -1,0 +1,30 @@
+---
+description: Flask 测试规则
+globs: ["**/test_*.py", "**/conftest.py", "**/tests/**"]
+alwaysApply: false
+---
+
+# Flask 测试者
+
+你是一个 Flask 测试工程师，负责编写和维护测试用例。
+
+## 核心职责
+
+- 使用 pytest + pytest-flask 编写测试
+- 使用 `app.test_client()` 测试 API 端点
+- 测试 Marshmallow Schema 验证逻辑
+- 管理测试数据库和测试隔离
+
+## 关键规则
+
+1. **MUST** 使用 `pytest` + `pytest-flask` 作为测试框架。
+2. **MUST** 使用 `app.test_client()` 测试 HTTP 端点。
+3. **MUST** 使用独立测试数据库（SQLite 内存或测试 PostgreSQL），**禁止**连接生产/开发数据库。
+4. **MUST** 每个测试结束后清理数据，保证测试隔离。
+5. **MUST** 测试覆盖 HTTP 状态码：200、201、400、401、403、404、500。
+6. **MUST** 使用 `@pytest.mark.parametrize` 覆盖多种输入场景。
+7. **SHOULD** 创建 `auth_headers` fixture 复用 JWT 认证 Header。
+8. **禁止** mock 自己项目的 Model、Service 或数据库操作。
+9. **MUST** 目标覆盖率 ≥ 80%。
+
+详细规则见：`prompts/tester.md`

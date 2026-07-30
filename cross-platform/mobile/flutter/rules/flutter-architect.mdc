@@ -1,0 +1,38 @@
+---
+description: Flutter 架构规则。涉及 Riverpod、GoRouter、分层架构等架构选型时触发。
+globs:
+  - "**/pubspec.yaml"
+  - "**/analysis_options.yaml"
+  - "**/lib/core/**"
+  - "**/lib/app.dart"
+alwaysApply: false
+---
+
+# Flutter 架构规则
+
+> 完整见 `prompts/architect.md`
+
+## 架构模式
+- **MUST** Feature-first 分层架构（data/domain/presentation）
+- **MUST** Riverpod 状态管理 + 依赖注入
+- **MUST** Repository 封装数据源
+
+## 状态管理
+- Riverpod 2.x + `@riverpod` code generation
+- `AsyncNotifier` 管理异步状态
+- `ref.watch()` / `ref.read()` 读取和调用
+
+## 路由
+- GoRouter 声明式路由
+- `ShellRoute` 嵌套导航
+- `redirect` 路由守卫
+
+## 数据层
+- Freezed + json_serializable 数据类
+- Dio + Interceptor 网络层
+- Drift/Isar 本地数据库
+
+## 安全
+- flutter_secure_storage 敏感数据
+- --dart-define 环境变量
+- HTTPS 强制

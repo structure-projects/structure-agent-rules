@@ -1,0 +1,43 @@
+---
+description: Echo 生态架构/设计约束。涉及模块划分、分层、API 设计、技术选型时生效。
+globs:
+  - "**/*.md"
+  - "**/go.mod"
+  - "**/Makefile"
+alwaysApply: false
+---
+
+# Echo 架构/设计规则
+
+完整规范见 `prompts/architect.md`（single source of truth）。以下为关键内联规则：
+
+## 硬约束
+- Go 版本 MUST >= 1.21（推荐 1.23+）
+- 包名 MUST 全部小写、单数、无下划线
+- 项目 MUST 遵循 Go 标准布局
+
+## 分层架构（Clean Architecture）
+- 依赖方向：`handler → service → repository → model`
+- **handler/**：只做绑定 + 调用 service + 渲染响应（返回 error）
+- **service/**：接口定义 + 实现分离，context.Context 第一参数
+- **repository/**：接口在 `repository/` 包，实现在 `ent/` 或 `sqlx/` 子包
+
+## 技术选型（推荐）
+| 层次 | 推荐 | 替代 |
+|---|---|---|
+| Web | Echo | — |
+| ORM | ent（代码生成） | sqlx / GORM |
+| 配置 | Viper | envconfig |
+| 日志 | Zerolog | Zap |
+| 校验 | go-playground/validator | — |
+| DI | Wire | fx |
+| API 文档 | swaggo/echo-swagger | — |
+| 测试 | testify + Echo test utils | ginkgo |
+
+## Echo 专属特性
+- Binder：`c.Bind(&req)` 支持 JSON/XML/Form/Query
+- Validator：通过 `e.Validator` 接口注册
+- HTTPErrorHandler：MUST 自定义统一错误响应格式
+- Context：`echo.Context` 功能丰富，使用 `c.Request().Context()` 传递
+
+详细规则请读 `prompts/architect.md`。

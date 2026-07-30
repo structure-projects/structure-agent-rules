@@ -1,0 +1,46 @@
+---
+description: iOS 原生开发约束。编写 Swift/SwiftUI 代码时始终生效。
+globs:
+  - "**/*.swift"
+  - "**/Package.swift"
+  - "**/*.xcodeproj/**"
+  - "**/*.xcconfig"
+alwaysApply: true
+---
+
+# iOS 原生开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- **MUST** Swift 5.9+ + SwiftUI + MVVM
+- **MUST** Swift Concurrency（async/await、Task、Actor）
+- **MUST** URLSession + SPM + SwiftLint
+- **MUST** Deployment Target >= iOS 16.0
+
+## 编码规范
+- **MUST** `struct` + `Codable` 数据模型，`enum` UI 状态
+- **MUST** ViewModel `@MainActor` + `@Observable`
+- **MUST** Repository Protocol 定义接口
+- **禁止** `try!` / `as!` 强制解包
+- **禁止** `UserDefaults` 存储敏感数据
+
+## SwiftUI
+- **MUST** `NavigationStack`（非 `NavigationView`）
+- **MUST** `LazyVStack` / `List` 列表
+- **MUST** `AsyncImage` 处理 loading/error
+- **MUST** `.contentShape(Rectangle())` 扩大点击区域
+
+## 安全
+- **MUST** Keychain 存储 Token/密码
+- **MUST** HTTPS 强制（ATS 默认）
+- **MUST** API 密钥通过 `.xcconfig` 注入
+
+## 测试工作流（MUST）
+- 每开发功能立即写单测（XCTest），通过才能做下一个
+- 功能修改时同步改测试
+- 核心流程写 XCUITest
+- 提交前 `xcodebuild test` + `swiftlint --strict` 全通过
+- **禁止** 测试/Lint 失败仍提交
+
+详细规则请读 `prompts/developer.md`。

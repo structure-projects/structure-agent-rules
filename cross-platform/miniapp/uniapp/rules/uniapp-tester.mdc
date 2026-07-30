@@ -1,0 +1,40 @@
+---
+description: UniApp 前端测试规则。编写测试代码时触发。
+globs:
+  - "**/*.test.ts"
+  - "**/*.spec.ts"
+  - "**/vitest.config.ts"
+alwaysApply: false
+---
+
+# UniApp 前端测试规则
+
+> 完整见 `prompts/tester.md`
+
+## 测试分层
+| 层 | 工具 |
+|---|---|
+| 单元测试 | Vitest |
+| 组件测试 | Vitest + @vue/test-utils |
+| E2E | 各平台真机调试 |
+
+## 关键约定
+- **MUST** `vitest.config.ts` 包含 `@dcloudio/vite-plugin-uni`
+- **MUST** `jsdom` 环境
+- **MUST** Store 测试使用 `setActivePinia(createPinia())`
+- **SHOULD** Mock `uni.request` 测试 API 调用
+
+## 真机验证
+- 微信小程序：开发者工具 + 真机预览
+- H5：移动端浏览器
+- App：HBuilderX 基座调试
+
+## 测试工作流（MUST）
+- 每功能开发后立即写单测
+- 功能修改时同步改测试
+- 业务完成后在目标平台真机验证
+- 提交前 `npm run test` + 所有平台 `npm run build` 全通过
+- **禁止** 测试/编译失败仍提交
+
+## 命名
+- 单元测试：`{name}.test.ts`

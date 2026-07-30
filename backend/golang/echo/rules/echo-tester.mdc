@@ -1,0 +1,39 @@
+---
+description: Echo 生态测试约束。编写测试代码时生效。
+globs:
+  - "**/*_test.go"
+alwaysApply: false
+---
+
+# Echo 测试规则
+
+完整规范见 `prompts/tester.md`。以下为关键内联规则：
+
+## 测试工作流（MUST）
+- 每开发一个功能立即写单测，通过才能做下一个
+- 修改功能时同步修改测试
+- 业务完成后写集成测试
+- 提交前：`go test -race ./...` 通过 + `go build ./cmd/server` 编译通过
+
+## 分层与命名
+- `xxx_test.go`（同包）— 单元测试，不启动外部依赖
+- `xxx_integration_test.go` + `//go:build integration` — 集成测试，Testcontainers 真实中间件
+- Handler 测试用 `httptest` + `e.NewContext(req, rec)` + `c.SetParamNames/Values`
+
+## 必须覆盖
+- 正常+异常+边界
+- 数据一致性、并发安全（`-race`）
+
+## Mock 边界
+- 只允许 Mock 外部进程边界
+- 允许 Mock 自己项目的 Repository/Service 接口
+- 禁止 Mock 标准库或框架核心类型
+
+## 禁止
+- 僵尸断言
+- `time.Sleep` 等待异步
+- 测试函数间相互依赖
+- 集成测试 Mock 数据库/Redis
+- `t.Skip` 无注释
+
+详细规则请读 `prompts/tester.md`。

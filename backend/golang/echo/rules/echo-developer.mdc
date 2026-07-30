@@ -1,0 +1,50 @@
+---
+description: Echo 生态开发约束。编写 Go/Echo 代码时始终生效。
+globs:
+  - "**/*.go"
+  - "**/go.mod"
+  - "**/Makefile"
+alwaysApply: true
+---
+
+# Echo 开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；校验见 `prompts/validation.md`；API 文档见 `prompts/swagger.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- Go >= 1.21，`go.mod` 管理依赖
+- 包名全部小写、单数、无下划线
+- 导出符号 MUST 有文档注释
+- 错误 MUST 被处理
+
+## 分层约束
+- **Handler**：只做绑定→调用→渲染，返回 `error`，使用 `c.Request().Context()`
+- **Service**：接口+实现分离，`context.Context` 第一参数，禁止引用 `echo.Context`
+- **Repository**：接口在 `repository/` 包，ent/sqlx 实现在子包，映射 `ent.IsNotFound`/`sql.ErrNoRows` 为业务错误
+
+## 关键优先级
+- **DI**：构造器注入 → Wire → 禁止全局变量
+- **错误**：哨兵错误 → AppError → `fmt.Errorf(": %w", err)`
+- **JSON**：`encoding/json`（标准库），禁止混用第三方
+
+## 持久化
+- ent：schema 定义在 `ent/schema/`，代码生成 `go generate ./ent`
+- sqlx：原生 SQL + 结构体映射
+- **MUST** 使用 `db.WithContext(ctx)` / `client.User.Query().Where(...).All(ctx)`
+- **MUST** 生产环境版本化迁移（atlas），**禁止** AutoMigrate
+- **MUST** 显式设置连接池参数
+
+## Echo 专属
+- **MUST** 注册 `e.Validator = &CustomValidator{validator: validator.New()}`
+- **MUST** 自定义 `e.HTTPErrorHandler` 统一错误响应
+- **MUST** 注册 Recover 中间件
+- **SHOULD** 注册 BodyLimit、RequestID、Timeout 中间件
+
+## 测试工作流（MUST）
+- 每开发一个功能立即写单测，通过才能做下一个
+- 修改功能时同步修改测试
+- 业务完成后写集成测试
+- 提交前：`go test -race ./...` 通过 + `go build ./cmd/server` 编译通过
+- 禁止测试/编译失败仍提交
+
+详细规则请读 `prompts/developer.md`。

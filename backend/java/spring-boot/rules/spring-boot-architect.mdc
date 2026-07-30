@@ -1,0 +1,40 @@
+---
+description: Spring Boot 架构/设计约束。涉及模块划分、分层、API 设计、技术选型时生效。
+globs:
+  - "**/*.md"
+  - "**/pom.xml"
+  - "**/build.gradle*"
+alwaysApply: false
+---
+
+# Spring Boot 架构/设计规则
+
+完整规范见 `prompts/architect.md`（single source of truth）。以下为关键内联规则：
+
+## 硬约束
+- Spring Boot 3.x + JDK 17+（`jakarta.*` 命名空间）
+- 包名 MUST 与 `groupId` 一致，遵循反向域名约定
+- 构建工具：Maven 或 Gradle（项目内统一）
+
+## 模块划分
+- 多模块推荐：`api` → `biz` → `core` → `infra` → `boot`
+- 依赖方向：`boot → biz → core`；`boot → infra`
+- **禁止** 反向依赖：`core` → `biz`、`api` → `biz`
+
+## DDD 分层（复杂业务推荐）
+- 依赖方向：`interfaces → application → domain`；`application → infrastructure`
+- `domain` MUST 不依赖任何框架（纯 POJO）
+- **禁止** 把 `Mapper`/`JpaRepository` 注入 `application`/`domain`
+
+## API 设计
+- RESTful：小写复数名词、短横线分隔（`/api/v1/user-orders`）
+- 分页统一：`PageQuery` + `PageResult<T>`
+- CRUD 命名统一：`create`/`update`/`delete`/`findById`/`page`
+
+## 安全
+- 认证：JWT / OAuth2
+- 密码 MUST BCrypt 加密
+- 敏感配置 MUST 环境变量或 Secrets 管理
+- 多租户：租户标识从 Token 上下文获取，**禁止**从请求参数读取
+
+详细规则、API 设计约束、安全与权限约束请读 `prompts/architect.md`。

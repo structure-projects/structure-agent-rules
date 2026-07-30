@@ -1,0 +1,80 @@
+---
+description: Tauri 架构与设计约束
+globs: "**/*.rs,**/tauri.conf.json,**/Cargo.toml,**/src-tauri/**/*"
+alwaysApply: false
+---
+
+# Tauri 架构设计
+
+> 详细架构规范见 `prompts/architect.md`。
+
+## 双层架构
+
+```
+tauri-app/
+├── src-tauri/              # Rust Core (后端)
+│   ├── Cargo.toml
+│   ├── tauri.conf.json     # 核心配置
+│   ├── capabilities/       # 权限声明
+│   ├── icons/              # 桌面图标
+│   ├── src/
+│   │   ├── main.rs         # 入口 + Command 注册
+│   │   ├── commands/       # IPC Command 定义
+│   │   ├── models/         # Rust 数据结构
+│   │   ├── services/       # 业务逻辑
+│   │   └── db/             # 数据库（sqlx / sled）
+│   └── migrations/         # 数据库迁移
+├── src/                    # Frontend (UI)
+│   ├── App.tsx             # TypeScript 应用入口
+│   ├── components/         # UI 组件
+│   ├── hooks/              # 自定义 Hooks
+│   ├── lib/                # 工具函数
+│   └── styles/             # CSS / Tailwind
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+```
+
+## 通信模式
+
+```
+┌──────────────────────────────────────────┐
+│             Renderer (Web)              │
+│  ┌────────────────────────────────┐     │
+│  │  invoke('cmd', { args })  →    │     │
+│  │  emit('event', payload)   →    │     │
+│  └────────────────────────────────┘     │
+└──────────────┬───────────────────────────┘
+               │  IPC Bridge
+┌──────────────▼───────────────────────────┐
+│           Rust Core (Native)            │
+│  ┌────────────────────────────────┐     │
+│  │  #[tauri::command] fn cmd(){}  │     │
+│  │  window.emit('event', ...)     │     │
+│  └────────────────────────────────┘     │
+└──────────────────────────────────────────┘
+```
+
+## 架构约束（MUST）
+
+- [ ] Rust 层负责所有系统级操作（文件、进程、网络监听）
+- [ ] 前端只做 UI 渲染和用户交互，不直接访问系统 API
+- [ ] 每个 Command 独立可测试，参数用 Serde 反序列化
+- [ ] `tauri.conf.json` 中 `identifier` 遵循反向域名格式
+- [ ] 权限声明在 `capabilities/` 目录按功能模块划分
+- [ ] 数据库迁移与 Rust 应用捆绑，首次启动自动执行
+
+## 插件使用
+
+| 功能 | 官方插件 |
+|---|---|
+| 文件系统 | `tauri-plugin-fs` |
+| Shell 命令 | `tauri-plugin-shell` |
+| 系统通知 | `tauri-plugin-notification` |
+| 对话框 | `tauri-plugin-dialog` |
+| 剪贴板 | `tauri-plugin-clipboard-manager` |
+| 全局快捷键 | `tauri-plugin-global-shortcut` |
+| 自动更新 | `tauri-plugin-updater` |
+| HTTP 请求 | `tauri-plugin-http` |
+| SQL 数据库 | `tauri-plugin-sql` |
+| 窗口状态 | `tauri-plugin-window-state` |

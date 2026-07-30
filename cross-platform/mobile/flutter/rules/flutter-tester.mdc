@@ -1,0 +1,38 @@
+---
+description: Flutter 测试规则。编写测试代码时触发。
+globs:
+  - "**/test/**"
+  - "**/integration_test/**"
+  - "**/*_test.dart"
+alwaysApply: false
+---
+
+# Flutter 测试规则
+
+> 完整见 `prompts/tester.md`
+
+## 测试分层
+| 层 | 工具 |
+|---|---|
+| 单元测试 | flutter_test + mocktail |
+| Widget 测试 | flutter_test |
+| 集成测试 | integration_test |
+
+## 测试工作流（MUST）
+- 每功能开发后立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 核心 Widget 写 Widget 测试
+- 核心流程写集成测试
+- 提交前 `flutter analyze` + `flutter test` 全通过
+- **禁止** 分析/测试失败仍提交
+
+## 命名
+- 单元测试：`{target}_test.dart` → `test/`
+- Widget 测试：`{widget}_test.dart` → `test/`
+- 集成测试：`{feature}_test.dart` → `integration_test/`
+
+## 关键规范
+- Provider 测试 `ProviderContainer` + `overrideWithValue()`
+- Widget 测试 `tester.pumpWidget()` + `ProviderScope` 包裹
+- 使用 `Key` 定位关键 Widget
+- `tester.pumpAndSettle()` 等待动画完成

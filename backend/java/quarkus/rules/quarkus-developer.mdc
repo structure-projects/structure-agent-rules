@@ -1,0 +1,138 @@
+---
+description: Quarkus 开发约束
+globs: **/*.java,**/*.kt,**/pom.xml,**/build.gradle*
+alwaysApply: true
+---
+
+# Quarkus 开发约束
+
+> 本规则适用于所有 Quarkus 3.x 项目。核心开发规范详见 `prompts/developer.md`。
+
+## 语言与 JDK
+
+- 支持 Java 和 Kotlin（JDK 17+）
+- 推荐使用 Maven 构建
+- GraalVM Native Image 可选支持
+
+## 核心原则（MUST）
+
+### 1. Jakarta 命名空间
+
+Quarkus 3.x 全面使用 `jakarta.*` 命名空间（非 `javax.*`）：
+
+```java
+// ✅ 正确：jakarta 命名空间
+import jakarta.ws.rs.*;
+import jakarta.inject.Inject;
+import jakarta.validation.constraints.NotBlank;
+
+// ❌ 错误：javax 命名空间（Quarkus 2.x 遗留）
+import javax.ws.rs.*;
+```
+
+### 2. JAX-RS 而非 Spring MVC
+
+Quarkus 使用 RESTEasy Reactive（JAX-RS 标准），**不使用** Spring MVC：
+
+```java
+// ✅ 正确：JAX-RS 注解
+@Path("/api/v1/users")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public class UserResource {
+
+    @GET
+    @Path("/{id}")
+    public Response findById(@PathParam("id") Long id) { ... }
+
+    @POST
+    public Response create(@Valid CreateUserDTO dto) { ... }
+}
+
+// ❌ 错误：Spring MVC 注解
+@RestController
+@RequestMapping("/api/v1/users")
+public class UserController { ... }
+```
+
+### 3. CDI 依赖注入
+
+使用 `@ApplicationScoped` + `@Inject`，**禁止**使用 `@Autowired`：
+
+```java
+// ✅ 正确：CDI 标准
+@ApplicationScoped
+public class UserService {
+    private final UserRepository userRepository;
+
+    @Inject
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+}
+```
+
+### 4. Panache ORM
+
+```java
+// Active Record 模式
+@Entity
+public class User extends PanacheEntity {
+    public String username;
+    public String email;
+
+    public static User findByEmail(String email) {
+        return find("email", email).firstResult();
+    }
+}
+
+// Repository 模式
+@ApplicationScoped
+public class UserRepository implements PanacheRepository<User> {
+    public User findByEmail(String email) {
+        return find("email", email).firstResult();
+    }
+}
+```
+
+### 5. 响应式（Mutiny）
+
+```java
+@GET
+@Path("/{id}")
+public Uni<Response> findById(@PathParam("id") Long id) {
+    return userRepository.findById(id)
+        .onItem().ifNotNull().transform(user -> Response.ok(UserVO.from(user)).build())
+        .onItem().ifNull().continueWith(() -> Response.status(404).build());
+}
+```
+
+## 检查清单（Commit 前必须）
+
+- [ ] 使用 `jakarta.*` 命名空间（非 `javax.*`）
+- [ ] 使用 JAX-RS 注解（非 Spring MVC）
+- [ ] 使用 CDI `@ApplicationScoped` + `@Inject`（非 `@Autowired`）
+- [ ] ORM 使用 Panache（Active Record 或 Repository 模式）
+- [ ] 响应式返回 `Uni<T>` / `Multi<T>`（Mutiny）
+- [ ] 测试类使用 `@QuarkusTest`
+- [ ] 配置文件使用 `@ConfigProperty` 或 `@ConfigMapping`
+- [ ] 未引入 Spring 框架依赖
+
+## 安全要求（MUST）
+
+- 所有 API 端点 MUST 声明安全注解（`@RolesAllowed` / `@Authenticated`）
+- 敏感配置（密码、密钥）MUST 使用环境变量或 SmallRye Config 加密
+- 生产环境 MUST 关闭 Swagger UI（通过 `quarkus.swagger-ui.always-include=false`）
+
+## 详细规范
+
+各专项规范见对应的 prompts 文件：
+- [开发规范](prompts/developer.md) — 完整开发约束
+- [架构设计](prompts/architect.md) — DDD 分层与模块划分
+- [代码评审](prompts/reviewer.md) — 评审检查清单
+- [测试规范](prompts/tester.md) — 单元测试与集成测试
+- [组件用法](prompts/components.md) — Quarkus 核心组件
+- [项目搭建](prompts/project-scaffolding.md) — 脚手架与初始化
+- [API 文档](prompts/swagger.md) — SmallRye OpenAPI 文档
+- [参数校验](prompts/validation.md) — Bean Validation 规范
+- [CI/CD](prompts/ci-cd.md) — 持续集成与部署

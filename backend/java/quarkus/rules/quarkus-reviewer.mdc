@@ -1,0 +1,108 @@
+---
+description: Quarkus 代码评审约束
+globs: **/*.java,**/*.kt,**/pom.xml,**/build.gradle*
+alwaysApply: false
+---
+
+# Quarkus 代码评审约束
+
+> 本规则适用于 Quarkus 3.x 项目的代码评审。详细评审规范见 `prompts/reviewer.md`。
+
+## 评审重点（MUST 检查）
+
+### 1. Jakarta 命名空间
+
+- 所有导入 MUST 使用 `jakarta.*`（非 `javax.*`）
+- **禁止**混用 `javax.*` 和 `jakarta.*`
+
+```java
+// ✅ 正确
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.inject.Inject;
+import jakarta.validation.constraints.NotBlank;
+
+// ❌ 错误
+import javax.ws.rs.GET;
+```
+
+### 2. JAX-RS vs Spring MVC
+
+```java
+// ❌ 错误：Spring MVC 注解
+@RestController
+@RequestMapping("/api/v1/users")
+public class UserController { ... }
+
+// ✅ 正确：JAX-RS 注解
+@Path("/api/v1/users")
+@Produces(MediaType.APPLICATION_JSON)
+public class UserResource { ... }
+```
+
+### 3. CDI 注入
+
+- **禁止** `@Autowired`
+- **必须** 使用 `@Inject` + `@ApplicationScoped`
+
+```java
+// ❌ 错误
+@Autowired
+private UserService userService;
+
+// ✅ 正确
+private final UserService userService;
+
+@Inject
+public OrderResource(UserService userService) {
+    this.userService = userService;
+}
+```
+
+### 4. REST 客户端
+
+- **禁止** 使用 `RestTemplate` / `WebClient`（Spring 风格）
+- **必须** 使用 MicroProfile REST Client（`@RegisterRestClient`）
+
+### 5. 响应式
+
+- 响应式端点 MUST 返回 `Uni<T>` / `Multi<T>`（Mutiny）
+- **禁止** 混用 CompletableFuture 和 Uni（除非必要转换）
+- **禁止** 在 Uni 链中阻塞等待
+
+### 6. 配置管理
+
+- 使用 `@ConfigProperty` 或 `@ConfigMapping`
+- **禁止** 使用 Spring `@Value`
+
+### 7. 安全性
+
+- 使用 `@RolesAllowed` / `@Authenticated` 声明安全策略
+- JWT 校验使用 `quarkus-smallrye-jwt`
+- **禁止** 在 Resource 中手动解析 JWT
+
+## 评审检查清单
+
+- [ ] 所有导入使用 `jakarta.*` 命名空间
+- [ ] 无 Spring MVC 注解（`@RestController` 等）
+- [ ] CDI 注入使用 `@Inject`（非 `@Autowired`）
+- [ ] REST 客户端使用 `@RegisterRestClient`
+- [ ] 响应式端点返回 `Uni<T>` / `Multi<T>`
+- [ ] 配置使用 `@ConfigProperty` / `@ConfigMapping`
+- [ ] 安全注解使用 `@RolesAllowed` / `@Authenticated`
+- [ ] 日志使用 SLF4J 或 JBoss Logging
+- [ ] 异常使用 JAX-RS `ExceptionMapper`
+
+## 常见反模式
+
+| 反模式 | 正确做法 |
+|---|---|
+| `@RestController` | `@Path` + `@GET`/`@POST` |
+| `@Autowired` | `@Inject` + `@ApplicationScoped` |
+| `RestTemplate` | `@RegisterRestClient` |
+| `@Value` | `@ConfigProperty` |
+| `javax.*` 导入 | `jakarta.*` 导入 |
+| `@SpringBootTest` | `@QuarkusTest` |
+| `@Transactional`（Spring） | `@Transactional`（jakarta） |
+
+详见 [代码评审 prompt](prompts/reviewer.md)。

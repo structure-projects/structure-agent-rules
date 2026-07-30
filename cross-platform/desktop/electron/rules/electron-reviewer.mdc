@@ -1,0 +1,83 @@
+---
+description: Electron 评审规则。审查 PR / diff 时通过 @reviewer 手动调用。
+alwaysApply: false
+---
+
+# Electron 评审规则
+
+> 完整见 `prompts/reviewer.md`
+
+## 审查清单
+
+### 进程模型
+- [ ] Main / Renderer / Preload 三层分离清晰
+- [ ] `contextIsolation: true` + `nodeIntegration: false`
+- [ ] `sandbox: true` 是否启用
+- [ ] `webSecurity: true` 是否启用
+
+### IPC 通信
+- [ ] 是否使用 `ipcMain.handle()` / `ipcRenderer.invoke()`（异步）
+- [ ] 是否避免 `ipcRenderer.sendSync()`（阻塞）
+- [ ] Preload 是否通过 `contextBridge.exposeInMainWorld()` 暴露 API
+- [ ] Preload 是否只暴露必要 API（最小权限）
+
+### 主进程（Main Process）
+- [ ] 文件/数据库操作是否在主进程（非渲染进程）
+- [ ] 窗口管理是否正确
+- [ ] 错误处理是否完善（try-catch）
+- [ ] 是否有未处理的 `uncaughtException`
+
+### 渲染进程（Renderer Process）
+- [ ] 是否通过 `window.electronAPI` 调用主进程
+- [ ] 是否避免了 `require('electron')`
+- [ ] 是否避免了直接文件系统访问
+- [ ] 前端框架代码是否与 Electron 代码解耦
+
+### Preload 脚本
+- [ ] 是否使用 `contextBridge`（非直接暴露）
+- [ ] 暴露的 API 是否最小化
+- [ ] 是否避免了在 preload 中使用 `fs`、`child_process`
+
+### 安全
+- [ ] `contextIsolation: true`
+- [ ] `nodeIntegration: false`
+- [ ] `sandbox: true`
+- [ ] CSP 是否配置
+- [ ] 是否禁用了 `enableRemoteModule`
+- [ ] 是否验证了 IPC 输入
+- [ ] 是否限制了 `webviewTag`（如不需要应禁用）
+
+### 窗口管理
+- [ ] 窗口配置是否合理（尺寸、最小尺寸）
+- [ ] 多窗口场景是否正确管理生命周期
+- [ ] 原生菜单是否正确配置
+- [ ] 系统托盘是否正确配置
+
+### 性能
+- [ ] 主进程是否有阻塞操作（应异步）
+- [ ] 渲染进程是否有内存泄漏（事件监听清理）
+- [ ] 大文件操作是否异步 + 流式
+
+### 测试
+- [ ] 主进程模块是否有单元测试
+- [ ] 渲染进程是否有组件测试
+- [ ] IPC 通信是否有集成测试
+- [ ] E2E 是否覆盖关键路径
+
+### 打包
+- [ ] `electron-builder.yml` / `forge.config.js` 是否正确
+- [ ] 自动更新配置是否正确
+- [ ] 代码签名是否正确配置
+- [ ] 多平台构建是否支持
+
+## 常见驳回
+1. `nodeIntegration: true`（严重安全风险）
+2. `contextIsolation: false`（严重安全风险）
+3. Preload 中直接暴露 `ipcRenderer`
+4. 渲染进程中 `require('electron')` 或 `require('fs')`
+5. 使用 `ipcRenderer.sendSync()`（阻塞）
+6. `sandbox: false` 生产环境
+7. CSP 未配置或过于宽松
+8. 缺少输入验证
+9. 主进程中同步阻塞操作
+10. 事件监听未清理（内存泄漏）

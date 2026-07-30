@@ -1,0 +1,168 @@
+---
+description: Quarkus 测试约束
+globs: **/*Test*.java,**/*Test*.kt,**/src/test/**
+alwaysApply: false
+---
+
+# Quarkus 测试约束
+
+> 本规则适用于 Quarkus 3.x 项目的测试编写。详细测试规范见 `prompts/tester.md`。
+
+## 测试框架
+
+- **JUnit 5**（Jupiter）作为测试引擎
+- **REST Assured** 用于 HTTP 集成测试（Quarkus 内置支持）
+- **Mockito** 用于单元测试 Mock
+- **Testcontainers** 用于集成测试（`@QuarkusTestResource`）
+
+## 测试注解（MUST）
+
+### 单元测试
+
+```java
+@QuarkusTest
+class UserServiceTest {
+
+    @Inject
+    UserService userService;
+
+    @InjectMock
+    UserRepository userRepository;
+
+    @Test
+    void shouldCreateUser() {
+        CreateUserDTO dto = new CreateUserDTO("张三", "zhangsan@example.com");
+        User user = new User();
+        user.username = "张三";
+        user.email = "zhangsan@example.com";
+
+        Mockito.when(userRepository.findByEmail("zhangsan@example.com"))
+            .thenReturn(null);
+        Mockito.doNothing().when(userRepository).persist(Mockito.any(User.class));
+
+        UserVO result = userService.createUser(dto);
+
+        assertThat(result.getUsername()).isEqualTo("张三");
+    }
+}
+```
+
+### HTTP 集成测试（REST Assured）
+
+```java
+@QuarkusTest
+class UserResourceTest {
+
+    @Test
+    void shouldReturnUser() {
+        given()
+            .when().get("/api/v1/users/1")
+            .then()
+            .statusCode(200)
+            .body("username", notNullValue());
+    }
+
+    @Test
+    void shouldCreateUser() {
+        CreateUserDTO dto = new CreateUserDTO("李四", "lisi@example.com");
+
+        given()
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(dto)
+            .when().post("/api/v1/users")
+            .then()
+            .statusCode(201)
+            .body("username", equalTo("李四"));
+    }
+
+    @Test
+    void shouldReturn404ForNonExistingUser() {
+        given()
+            .when().get("/api/v1/users/99999")
+            .then()
+            .statusCode(404);
+    }
+}
+```
+
+### Testcontainers 集成测试
+
+```java
+@QuarkusTest
+@QuarkusTestResource(PostgresResource.class)
+class UserRepositoryTest {
+
+    @Inject
+    UserRepository userRepository;
+
+    @Test
+    void shouldFindByEmail() {
+        User user = new User();
+        user.username = "张三";
+        user.email = "zhangsan@example.com";
+        userRepository.persist(user);
+
+        User found = userRepository.findByEmail("zhangsan@example.com");
+
+        assertThat(found).isNotNull();
+        assertThat(found.username).isEqualTo("张三");
+    }
+}
+
+// Testcontainer Resource
+public class PostgresResource implements QuarkusTestResourceLifecycleManager {
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
+
+    @Override
+    public Map<String, String> start() {
+        postgres.start();
+        return Map.of(
+            "quarkus.datasource.jdbc.url", postgres.getJdbcUrl(),
+            "quarkus.datasource.username", postgres.getUsername(),
+            "quarkus.datasource.password", postgres.getPassword()
+        );
+    }
+
+    @Override
+    public void stop() {
+        postgres.stop();
+    }
+}
+```
+
+### Native 测试
+
+```java
+@QuarkusIntegrationTest  // 在 Native Image 中运行
+class NativeUserResourceIT extends UserResourceTest {
+    // 继承 HTTP 集成测试，在 Native 模式下执行
+}
+```
+
+## 测试覆盖要求（MUST）
+
+- Resource 层：HTTP 集成测试（REST Assured）
+- Service 层：单元测试（`@InjectMock` Mock 依赖）
+- Repository 层：集成测试（Testcontainers）
+- 核心业务逻辑：单元测试覆盖率 ≥ 80%
+- Native Image：至少运行关键路径的集成测试
+
+## 测试命名规范
+
+```
+方法名_场景_期望结果
+例如：findById_userExists_return200()
+     findById_userNotExists_return404()
+```
+
+## 检查清单
+
+- [ ] 测试类使用 `@QuarkusTest`
+- [ ] Mock 使用 `@InjectMock`
+- [ ] HTTP 测试使用 REST Assured
+- [ ] 集成测试使用 `@QuarkusTestResource` + Testcontainers
+- [ ] Native 测试使用 `@QuarkusIntegrationTest`
+- [ ] 每个测试方法独立，不依赖执行顺序
+- [ ] 无 `Thread.sleep()` 调用（使用 `Awaitility` 或 `Uni.await()`）
+
+详见 [测试规范 prompt](prompts/tester.md)。

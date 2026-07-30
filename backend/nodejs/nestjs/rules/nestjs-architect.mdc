@@ -1,0 +1,49 @@
+---
+description: NestJS 生态架构/设计约束。涉及模块划分、分层、API 设计、技术选型时生效。
+globs:
+  - "**/*.md"
+  - "**/package.json"
+  - "**/nest-cli.json"
+alwaysApply: false
+---
+
+# NestJS 架构/设计规则
+
+完整规范见 `prompts/architect.md`（single source of truth）。以下为关键内联规则：
+
+## 硬约束
+- Node.js >= 18（推荐 20 LTS）
+- TypeScript 严格模式（`strict: true`）
+- 使用 NestJS 模块系统组织代码
+
+## 分层架构
+```
+Controller（路由） → Service（业务） → Repository（数据）
+     ↓                    ↓
+   DTO（入参校验）     Entity（领域模型）
+```
+
+- **Controller**：路由定义、请求解析、响应格式化。禁止写业务逻辑
+- **Service**：业务逻辑，`@Injectable()` 注入
+- **Repository**：数据访问（TypeORM Repository / Prisma Service）
+- **Module**：组织 Controller + Provider 的容器
+
+## 技术选型
+| 层次 | 推荐 | 替代 |
+|---|---|---|
+| ORM | TypeORM | Prisma / MikroORM |
+| 校验 | class-validator + class-transformer | zod |
+| API 文档 | @nestjs/swagger | — |
+| 配置 | @nestjs/config | — |
+| 认证 | @nestjs/jwt + @nestjs/passport | — |
+| 测试 | Jest + @nestjs/testing | — |
+
+## 关键约束
+- Module MUST 正确声明 imports/controllers/providers/exports
+- 跨模块依赖 MUST 通过 Module exports/imports
+- DTO MUST 使用 class（非 interface）
+- 全局注册 ValidationPipe（whitelist + transform）
+- 全局异常过滤器统一响应格式
+- 生产 MUST 启用 helmet + CORS 白名单 + Rate Limiting
+
+详细规则请读 `prompts/architect.md`。

@@ -1,0 +1,71 @@
+---
+description: Ionic 评审规则。审查 PR / diff 时通过 @reviewer 手动调用。
+alwaysApply: false
+---
+
+# Ionic 评审规则
+
+> 完整见 `prompts/reviewer.md`
+
+## 审查清单
+
+### 架构
+- [ ] 是否遵循 Feature-module 分层架构
+- [ ] Service/Provider 是否正确封装业务逻辑
+- [ ] API 调用是否集中在 Service 层（非组件内直接调用）
+- [ ] 状态管理是否选型合理（NgRx / Zustand / Pinia）
+
+### Ionic 组件
+- [ ] 是否使用 Ionic 组件替代原生 HTML（`<ion-input>` 非 `<input>`）
+- [ ] `<ion-list>` / `<ion-item>` 是否正确使用
+- [ ] `<ion-modal>` / `<ion-toast>` / `<ion-alert>` 使用正确
+- [ ] `<ion-grid>` / `<ion-row>` / `<ion-col>` 响应式布局正确
+- [ ] 是否使用 `ion-virtual-scroll` 处理长列表
+
+### 平台适配
+- [ ] `Platform` 服务是否用于平台检测
+- [ ] iOS/md mode 差异是否正确处理
+- [ ] `ion-split-pane` 是否正确用于平板适配
+
+### 导航
+- [ ] 是否使用 `IonRouterOutlet` 而非裸 RouterOutlet
+- [ ] Tab 导航是否使用 `<ion-tabs>`
+- [ ] 路由守卫是否正确配置
+- [ ] 懒加载是否配置（Angular）/ 动态导入（React/Vue）
+
+### Capacitor 插件
+- [ ] 原生功能是否通过 Capacitor 插件（非 Cordova 插件）
+- [ ] 权限请求是否正确处理（Camera、Geolocation 等）
+- [ ] 插件版本与 Capacitor 版本兼容
+
+### TypeScript 质量
+- [ ] 类型定义完整，无 `any` 滥用
+- [ ] 接口和类型分离清晰
+- [ ] strict 模式是否通过
+
+### 性能
+- [ ] 长列表是否使用 `ion-virtual-scroll`
+- [ ] 图片是否懒加载
+- [ ] 页面是否懒加载
+- [ ] 是否有不必要的重渲染
+
+### 安全
+- [ ] HTTPS 强制
+- [ ] 敏感数据是否使用 Secure Storage
+- [ ] API 密钥无硬编码
+- [ ] CSP 配置是否合理
+
+### 测试
+- [ ] 新增 Service 是否有单元测试
+- [ ] 新增页面是否有组件测试
+- [ ] 核心流程是否有 E2E 测试
+
+## 常见驳回
+1. 使用原生 HTML 元素代替 Ionic 组件
+2. 直接操作 DOM 元素
+3. 使用 Cordova 插件而非 Capacitor 插件
+4. 硬编码平台判断（`if (navigator.userAgent)` 而非 `Platform` 服务）
+5. 未使用 `IonRouterOutlet`
+6. 长列表未使用虚拟滚动
+7. 缺少平台权限请求处理
+8. 敏感数据存 `localStorage`

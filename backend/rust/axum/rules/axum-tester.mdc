@@ -1,0 +1,42 @@
+---
+description: Axum 生态测试约束。编写测试代码时生效。
+globs:
+  - "**/*_test.rs"
+  - "**/tests/**"
+alwaysApply: false
+---
+
+# Axum 测试规则
+
+完整规范见 `prompts/tester.md`。以下为关键内联规则：
+
+## 测试工作流（MUST）
+- 每开发一个功能 **立即** 写单元测试，**单测通过才能做下一个功能**
+- 功能有修改时 **同步修改测试** 并通过
+- 业务完成后写 **业务流程集成测试**，通过才算交付
+- 覆盖正常+异常+边界；断言验证行为与数据（**禁止** 僵尸断言）
+- **提交前**：`cargo test` 全部通过 + `cargo build --release` 编译通过
+
+## 分层与命名
+- `#[cfg(test)] mod tests { ... }`（同文件内嵌测试模块）— 单元测试，不启动外部依赖
+- `tests/` 目录 — 集成测试，**必须** 用真实中间件（Testcontainers / docker-compose），**禁止** Mock 数据库/Redis/MQ
+- Handler 测试用 `axum_test` 或 `reqwest` + `tokio::test`
+
+## 必须覆盖
+- 正常路径 + 异常路径 + 边界条件
+- 数据一致性：事务回滚、重复创建
+- 并发安全：使用 `tokio::test` 测试异步代码
+
+## Mock 边界
+- 只允许 Mock 进程边界（第三方 HTTP / 外部 SaaS）
+- 允许 Mock 自己项目的 Repository/Service trait（在同层测试中）
+- 禁止 Mock 标准库或框架核心类型
+
+## 禁止
+- 僵尸断言（只 `assert!(result.is_ok())` / 只看 HTTP 200）
+- `tokio::time::sleep` 等待异步 —— 用 `tokio::sync::oneshot` 或 `tokio::sync::watch`
+- 测试函数间相互依赖
+- 集成测试 Mock 数据库/Redis
+- `#[ignore]` 无注释说明原因
+
+详细规则请读 `prompts/tester.md`。

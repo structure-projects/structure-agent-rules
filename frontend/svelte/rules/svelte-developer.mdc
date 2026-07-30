@@ -1,0 +1,49 @@
+---
+description: Svelte 前端开发约束。编写 Svelte/TS/CSS 代码时始终生效。
+globs:
+  - "**/*.svelte"
+  - "**/*.ts"
+  - "**/svelte.config.js"
+  - "**/vite.config.ts"
+  - "**/package.json"
+  - "**/+page.server.ts"
+alwaysApply: true
+---
+
+# Svelte 前端开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- **MUST** Svelte 4 或 Svelte 5（runes），版本语法不混用
+- **MUST** SvelteKit 全栈框架
+- **MUST** TypeScript (`<script lang="ts">`)
+- **SHOULD** Tailwind CSS 或 Skeleton UI
+
+## 组件
+- **MUST** `.svelte` 文件：`<script>` → 模板 → `<style>`
+- **MUST** Props 完整 TypeScript 类型
+- Svelte 4：`export let` + `$:` 响应式
+- Svelte 5：`$props()` + `$state()` + `$derived()`
+
+## 模板
+- **MUST** `{#each}` 使用 key 表达式
+- **SHOULD** `{#await}` 处理 Promise 三种状态
+
+## 路由（SvelteKit）
+- **MUST** 数据加载用 `load` 函数（`+page.server.ts`）
+- **SHOULD** 表单用 Form Actions
+- **MUST** 使用 `$types` 自动类型
+
+## 样式
+- **MUST** 组件样式在 `<style>` 标签内（自动 scoped）
+- **禁止** 滥用 `:global()`
+
+## 测试工作流（MUST）
+- 每开发功能立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 业务完成后写 E2E（Playwright）
+- 提交前 `npm run test` + `npm run build` 全通过
+- **禁止** 测试/编译失败仍提交
+
+详细规则请读 `prompts/developer.md`。

@@ -1,0 +1,55 @@
+---
+description: Spring Boot 评审约束。审查 PR / diff / 设计文档时生效。
+globs:
+  - "**/*.md"
+alwaysApply: false
+---
+
+# Spring Boot 评审规则
+
+完整规范见 `prompts/reviewer.md`。以下为关键内联规则：
+
+## 评审顺序
+1. 包名与坐标 → 2. 模块依赖方向 → 3. Bean 注入 → 4. 分层职责 → 5. 异常处理 → 6. POJO 规范 → 7. 持久化规范 → 8. 事务管理 → 9. 安全 → 10. 性能 → 11. 测试 → 12. 文档
+
+## 硬性驳回项
+- Controller 包含业务逻辑
+- Service 层直接操作 HttpServletRequest/HttpServletResponse
+- 反向依赖（`core` → `biz`）
+- `domain`/`application` 直接注入 `Mapper`/`JpaRepository`
+- 循环依赖
+- `@Autowired` 字段注入（应用构造器注入）
+- Service 返回 null 表示"未找到"
+- Controller 手动 try-catch 业务异常
+- SQL 拼接（防注入）
+- N+1 查询
+- Controller 层 `@Transactional`
+- 事务方法捕获异常不抛出
+- POJO 缺少无参构造
+- JPA Entity 使用 `@Data`
+- 密码明文存储或日志打印
+- Token/API Key 硬编码
+- 文件上传未校验类型和大小
+- 敏感接口无权限校验
+- 新功能无单测；改功能未同步测试；僵尸断言；测试/编译失败仍提交
+- 集成测试 Mock 数据库/Redis/MQ
+- 无 issue 关联的 `@Disabled` 测试
+- 服务间调用用 `RestTemplate`/`WebClient`/手写 HTTP
+- `@FeignClient` 未声明 `fallback`/`fallbackFactory`
+- 强一致性场景 fallback 静默返回兜底数据
+
+## 建议性反馈
+- 方法过长（> 50 行）
+- 类过大（> 500 行）
+- 魔法数字未定义常量
+- 重复代码未抽取
+- `SELECT *` 查询全部字段
+- 大事务（含 RPC 调用或文件 I/O）
+- 使用 `System.out.println`（应用 `@Slf4j`）
+- 命名不统一（`list`/`page`/`queryPage` 混用）
+- Hutool/Apache Commons 已实现却手写工具
+
+## 反馈格式
+每条反馈含：位置（`file:line`）、级别（MUST-FIX / SHOULD-FIX / NIT / QUESTION）、依据（引用规则条目）、建议（可落地）。
+
+详细规则请读 `prompts/reviewer.md`。

@@ -1,0 +1,32 @@
+---
+description: Flask 开发规则
+globs: ["**/*.py"]
+alwaysApply: true
+---
+
+# Flask 开发者
+
+你是一个 Flask 后端开发者，遵循 Flask 最佳实践进行编码。
+
+## 核心职责
+
+- 使用 Application Factory 模式创建 Flask 应用
+- 使用 Blueprints 组织路由
+- 使用 Flask-SQLAlchemy + Flask-Migrate 管理数据库
+- 使用 Marshmallow 进行序列化和验证
+- 使用 Flask-JWT-Extended 实现 JWT 认证
+
+## 关键规则
+
+1. **MUST** 使用 Application Factory 模式（`create_app()`），**禁止**模块级别创建 `app = Flask(__name__)`。
+2. **MUST** 使用 Blueprints 按业务领域组织路由，每个 Blueprint 有明确的 `url_prefix`。
+3. **MUST** 使用 `Flask-SQLAlchemy` + `Flask-Migrate` 管理数据库和迁移。
+4. **MUST** 使用 Marshmallow Schema 进行请求验证和响应序列化。
+5. **MUST** 使用 `Flask-JWT-Extended` 实现 JWT 认证，`@jwt_required()` 保护端点。
+6. **MUST** 敏感配置从环境变量读取，**禁止**硬编码。
+7. **MUST** 使用 `@app.errorhandler()` 注册全局错误处理器。
+8. **MUST** 使用 `Flask-CORS` 管理跨域，**禁止**生产环境 `origins="*"` 配合 `supports_credentials=True`。
+9. **禁止** 在请求上下文外访问 `request`、`g`、`session`。
+10. **禁止** 使用已废弃的 `flask-script`，使用 Flask CLI。
+
+详细规则见：`prompts/developer.md`

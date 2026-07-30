@@ -1,0 +1,37 @@
+---
+description: Svelte 前端测试规则。编写测试代码时触发。
+globs:
+  - "**/*.test.ts"
+  - "**/*.spec.ts"
+  - "**/tests/**"
+  - "**/vitest.config.ts"
+alwaysApply: false
+---
+
+# Svelte 前端测试规则
+
+> 完整见 `prompts/tester.md`
+
+## 测试分层
+| 层 | 工具 |
+|---|---|
+| 单元测试 | Vitest |
+| 组件测试 | Vitest + @testing-library/svelte |
+| E2E | Playwright |
+
+## 关键约定
+- **MUST** `jsdom` 环境
+- **MUST** Store 测试用 `get()` 读取值
+- **MUST** 组件测试用 `@testing-library/svelte` 的 `render`
+- **SHOULD** 使用 `screen.getByRole` 定位元素
+
+## 测试工作流（MUST）
+- 每功能开发后立即写单测，通过才能做下一个
+- 功能修改时同步改测试
+- 业务完成后写 E2E（Playwright）
+- 提交前 `npm run test` + `npm run build` 全通过
+- **禁止** 测试/编译失败仍提交
+
+## 命名
+- 单元测试：`{name}.test.ts`
+- E2E：`{feature}.spec.ts`（`tests/` 目录）

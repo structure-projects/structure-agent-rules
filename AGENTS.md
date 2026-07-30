@@ -25,42 +25,42 @@
 | 语言 | 技术栈 | 状态 |
 |---|---|---|
 | **Java** | [structure-boot](backend/java/structure-boot/) | ✅ 内容完整 |
-| Java | [spring-boot](backend/java/spring-boot/) | 📋 占位 |
-| Java | [micronaut](backend/java/micronaut/) | 📋 占位 |
-| Java | [quarkus](backend/java/quarkus/) | 📋 占位 |
-| Python | [django](backend/python/django/) | 📋 占位 |
-| Python | [fastapi](backend/python/fastapi/) | 📋 占位 |
-| Python | [flask](backend/python/flask/) | 📋 占位 |
-| Go | [gin](backend/golang/gin/) | 📋 占位 |
-| Go | [echo](backend/golang/echo/) | 📋 占位 |
-| Rust | [axum](backend/rust/axum/) | 📋 占位 |
-| Rust | [actix](backend/rust/actix/) | 📋 占位 |
-| Node.js | [nestjs](backend/nodejs/nestjs/) | 📋 占位 |
-| Node.js | [koa](backend/nodejs/koa/) | 📋 占位 |
-| Node.js | [express](backend/nodejs/express/) | 📋 占位 |
+| Java | [spring-boot](backend/java/spring-boot/) | ✅ 内容完整 |
+| Java | [micronaut](backend/java/micronaut/) | ✅ 内容完整 |
+| Java | [quarkus](backend/java/quarkus/) | ✅ 内容完整 |
+| Python | [django](backend/python/django/) | ✅ 内容完整 |
+| Python | [fastapi](backend/python/fastapi/) | ✅ 内容完整 |
+| Python | [flask](backend/python/flask/) | ✅ 内容完整 |
+| Go | [gin](backend/golang/gin/) | ✅ 内容完整 |
+| Go | [echo](backend/golang/echo/) | ✅ 内容完整 |
+| Rust | [axum](backend/rust/axum/) | ✅ 内容完整 |
+| Rust | [actix](backend/rust/actix/) | ✅ 内容完整 |
+| Node.js | [nestjs](backend/nodejs/nestjs/) | ✅ 内容完整 |
+| Node.js | [koa](backend/nodejs/koa/) | ✅ 内容完整 |
+| Node.js | [express](backend/nodejs/express/) | ✅ 内容完整 |
 
 ### 前端
 
 | 框架 | 技术栈 | 状态 |
 |---|---|---|
 | **Vue** | [vue3](frontend/vue3/) | ✅ 内容完整 |
-| React | [react](frontend/react/) | 📋 占位 |
-| React | [nextjs](frontend/nextjs/) | 📋 占位 |
-| Angular | [angular](frontend/angular/) | 📋 占位 |
-| Svelte | [svelte](frontend/svelte/) | 📋 占位 |
+| React | [react](frontend/react/) | ✅ 内容完整 |
+| React | [nextjs](frontend/nextjs/) | ✅ 内容完整 |
+| Angular | [angular](frontend/angular/) | ✅ 内容完整 |
+| Svelte | [svelte](frontend/svelte/) | ✅ 内容完整 |
 
 ### 跨平台
 
 | 平台 | 技术栈 | 状态 |
 |---|---|---|
-| 移动 | [flutter](cross-platform/mobile/flutter/) | 📋 占位 |
-| 移动 | [react-native](cross-platform/mobile/react-native/) | 📋 占位 |
-| 移动 | [ionic](cross-platform/mobile/ionic/) | 📋 占位 |
-| 桌面 | [tauri](cross-platform/desktop/tauri/) | 📋 占位 |
-| 桌面 | [electron](cross-platform/desktop/electron/) | 📋 占位 |
-| 小程序 | [uniapp](cross-platform/miniapp/uniapp/) | 📋 占位 |
-| 原生 | [android](cross-platform/native/android/) | 📋 占位 |
-| 原生 | [ios](cross-platform/native/ios/) | 📋 占位 |
+| 移动 | [flutter](cross-platform/mobile/flutter/) | ✅ 内容完整 |
+| 移动 | [react-native](cross-platform/mobile/react-native/) | ✅ 内容完整 |
+| 移动 | [ionic](cross-platform/mobile/ionic/) | ✅ 内容完整 |
+| 桌面 | [tauri](cross-platform/desktop/tauri/) | ✅ 内容完整 |
+| 桌面 | [electron](cross-platform/desktop/electron/) | ✅ 内容完整 |
+| 小程序 | [uniapp](cross-platform/miniapp/uniapp/) | ✅ 内容完整 |
+| 原生 | [android](cross-platform/native/android/) | ✅ 内容完整 |
+| 原生 | [ios](cross-platform/native/ios/) | ✅ 内容完整 |
 
 ### 通用规则
 
@@ -84,11 +84,20 @@
 | 方案 | 后端规则 | 前端规则 | 说明 |
 |---|---|---|---|
 | **Vue 3 + structure-boot** | structure-boot | vue3 | structure-projects 标准全栈 |
-| Vue 3 + Spring Boot | spring-boot | vue3 | 原生 Spring Boot 方案（待补充） |
+| Vue 3 + Spring Boot | spring-boot | vue3 | 通用 Spring Boot 全栈 |
 | React + structure-boot | structure-boot | react | 待补充 |
-| React + NestJS | nestjs | react | 待补充 |
-| UniApp + structure-boot | structure-boot | uniapp | 待补充 |
-| Flutter + structure-boot | structure-boot | flutter | 待补充 |
+| React + Spring Boot | spring-boot | react | 通用 Spring Boot + React |
+| React + NestJS | nestjs | react | 全 TypeScript 全栈 |
+| React + FastAPI | fastapi | react | Python 后端 + React 前端 |
+| React + Gin | gin | react | Go 后端 + React 前端 |
+| Vue 3 + Django | django | vue3 | Python Django + Vue 3 |
+| Next.js + FastAPI | fastapi | nextjs | 全栈 SSR + Python API |
+| Next.js + NestJS | nestjs | nextjs | 全 TypeScript SSR 全栈 |
+| UniApp + structure-boot | structure-boot | uniapp | 小程序全栈 |
+| UniApp + Spring Boot | spring-boot | uniapp | 通用小程序全栈 |
+| Flutter + structure-boot | structure-boot | flutter | 移动端全栈 |
+| Flutter + FastAPI | fastapi | flutter | Python 后端 + Flutter |
+| React Native + FastAPI | fastapi | react-native | Python 后端 + RN |
 
 ## 安装说明
 

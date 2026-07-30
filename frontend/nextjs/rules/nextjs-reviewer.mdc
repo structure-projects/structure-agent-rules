@@ -1,0 +1,60 @@
+---
+description: Next.js 前端评审规则。审查 PR / diff 时通过 @reviewer 手动调用。
+alwaysApply: false
+---
+
+# Next.js 前端评审规则
+
+> 完整见 `prompts/reviewer.md`
+
+## 审查清单
+
+### App Router
+- [ ] 使用 App Router（非 Pages Router）
+- [ ] 路由组 `(groupName)` 正确
+- [ ] 提供 `loading.tsx` + `error.tsx`
+
+### Server/Client Components
+- [ ] 默认 Server Component
+- [ ] `'use client'` 仅在必要时
+- [ ] Client Component 为叶子节点
+- [ ] 无 Hook 在 Server Component 中
+
+### 数据获取
+- [ ] Server Component 中顶层 await
+- [ ] 并行请求 `Promise.all`
+
+### Server Actions
+- [ ] Zod 校验
+- [ ] 操作后 `revalidatePath`
+- [ ] 返回结构化结果
+
+### 认证
+- [ ] Middleware 保护路由
+- [ ] `config.matcher` 精确
+
+### 安全
+- [ ] 用户输入 Zod 校验
+- [ ] 服务端密钥无 `NEXT_PUBLIC_` 前缀
+- [ ] Server Action 有权限检查
+
+### 优化
+- [ ] `next/image` 处理图片
+- [ ] `next/font` 处理字体
+- [ ] 关键图片 `priority`
+
+### 测试
+- [ ] 新增功能有单元测试
+- [ ] E2E 覆盖核心流程
+
+## 常见驳回
+1. 使用 Pages Router
+2. Server Component 中使用 Hook
+3. 使用 `next/router`
+4. Server Action 无 Zod 校验
+5. Server Action 不刷新缓存
+6. 服务端密钥暴露（`NEXT_PUBLIC_`）
+7. Prisma Client 非单例
+8. 图片未用 `next/image`
+9. 缺少 `loading.tsx` / `error.tsx`
+10. Middleware matcher 过宽

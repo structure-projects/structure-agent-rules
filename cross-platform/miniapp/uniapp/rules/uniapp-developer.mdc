@@ -1,0 +1,56 @@
+---
+description: UniApp 前端开发约束。编写 Vue/TS/SCSS 代码时始终生效。
+globs:
+  - "**/*.vue"
+  - "**/*.ts"
+  - "**/pages.json"
+  - "**/manifest.json"
+  - "**/uni.scss"
+  - "**/package.json"
+alwaysApply: true
+---
+
+# UniApp 前端开发规则
+
+完整规范见 `prompts/developer.md`；组件用法见 `prompts/components.md`；新建项目见 `prompts/project-scaffolding.md`；流水线见 `prompts/ci-cd.md`。以下为关键内联规则：
+
+## 硬约束
+- **MUST** Vue 3 + UniApp，`<script setup lang="ts">`
+- **MUST** `pages.json` 配置所有页面和 tabBar
+- **MUST** `manifest.json` 配置各平台 appid
+- **SHOULD** uView Plus UI 组件库
+- **SHOULD** Pinia 状态管理
+
+## 组件
+- **MUST** 使用 UniApp 内置组件（`<view>`、`<text>`、`<image>`）
+- **禁止** 使用 HTML 标签（`<div>`、`<span>`、`<img>`）
+- **MUST** Props/Emits 完整 TS 类型
+- easycom 自动导入 components/ 下组件
+
+## 路由
+- **MUST** 路由由 `pages.json` 管理（非 Vue Router）
+- `uni.navigateTo` / `uni.switchTab` / `uni.redirectTo`
+- Tab 页必须用 `switchTab`
+
+## API
+- **MUST** 封装 `uni.request` 为统一 request 函数
+- **禁止** 直接在业务代码调用 `uni.request`
+- 401 统一跳转登录页
+
+## 样式
+- **MUST** 使用 `rpx` 单位（750rpx = 屏幕宽度）
+- **禁止** 使用 `px` 单位
+- **MUST** 全局变量在 `uni.scss` 中定义
+- 样式 scoped
+
+## 条件编译
+- 平台差异代码用 `#ifdef` / `#ifndef` / `#endif`
+- 小程序 API 必须在条件编译块中
+
+## 测试工作流（MUST）
+- 每开发功能立即在目标平台验证
+- 功能修改时同步改测试
+- 提交前 `npm run test` + 所有平台 `npm run build` 全通过
+- **禁止** 测试/编译失败仍提交
+
+详细规则请读 `prompts/developer.md`。

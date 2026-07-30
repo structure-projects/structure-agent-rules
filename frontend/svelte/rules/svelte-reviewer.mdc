@@ -1,0 +1,58 @@
+---
+description: Svelte 前端评审规则。审查 PR / diff 时通过 @reviewer 手动调用。
+alwaysApply: false
+---
+
+# Svelte 前端评审规则
+
+> 完整见 `prompts/reviewer.md`
+
+## 审查清单
+
+### 组件
+- [ ] `.svelte` 结构规范（script → template → style）
+- [ ] `<script lang="ts">`
+- [ ] Props 完整 TypeScript 类型
+- [ ] `{#each}` 使用 key
+- [ ] 文件名 PascalCase
+
+### 版本一致性
+- [ ] Svelte 4/5 语法不混用
+
+### 数据加载
+- [ ] `+page.server.ts` load 函数正确
+- [ ] 敏感数据仅 server load
+- [ ] 使用 `$types` 类型
+
+### 性能
+- [ ] 图片懒加载
+- [ ] 大列表虚拟滚动
+- [ ] 无多余响应式声明
+
+### 安全
+- [ ] `{@html}` 内容消毒
+- [ ] 私密环境变量仅 `$env/static/private`
+- [ ] API 端点有鉴权
+
+### SvelteKit
+- [ ] adapter 配置正确
+- [ ] `hooks.server.ts` 鉴权
+- [ ] 表单使用 Form Actions
+
+### 可访问性
+- [ ] 图片有 alt
+- [ ] 表单有 label
+- [ ] 键盘可访问
+
+### 测试
+- [ ] 新增功能有单元测试
+- [ ] 组件有渲染测试
+- [ ] E2E 覆盖核心流程
+
+## 常见驳回
+1. Svelte 4/5 语法混用
+2. Props 无类型
+3. `{@html}` 未消毒
+4. `{#each}` 无 key
+5. 私密环境变量暴露
+6. 引入新 UI 库未评审

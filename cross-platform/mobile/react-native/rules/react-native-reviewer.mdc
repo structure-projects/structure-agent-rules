@@ -1,0 +1,55 @@
+---
+description: React Native 评审规则。审查 PR / diff 时通过 @reviewer 手动调用。
+alwaysApply: false
+---
+
+# React Native 评审规则
+
+> 完整见 `prompts/reviewer.md`
+
+## 审查清单
+
+### 架构
+- [ ] Custom Hooks 封装业务逻辑
+- [ ] API 在 Service 层，不在组件中直接调用
+- [ ] 全局状态与服务端状态正确分离
+
+### TypeScript
+- [ ] strict 模式，无 `any`
+- [ ] Props 完整 interface
+- [ ] 导航参数类型安全
+
+### 导航
+- [ ] Native Stack Navigator
+- [ ] NavigationContainer 包裹
+
+### 性能
+- [ ] FlatList + keyExtractor
+- [ ] FastImage 远程图片
+- [ ] Reanimated 动画
+
+### 样式
+- [ ] StyleSheet.create()
+- [ ] 无内联样式
+
+### 安全
+- [ ] SecureStore / Keychain 敏感数据
+- [ ] 环境变量注入密钥
+
+### 测试
+- [ ] 新增组件有 RNTL 测试
+- [ ] 新增 Hook 有单元测试
+
+### 构建
+- [ ] Hermes 启用
+- [ ] Reanimated plugin 配置
+- [ ] GestureHandlerRootView 包裹
+
+## 常见驳回
+1. 组件中直接调用 API
+2. 使用 JS Stack Navigator
+3. 缺少类型定义
+4. 使用 `any`
+5. ScrollView + map 替代 FlatList
+6. 内联样式
+7. 敏感数据存 AsyncStorage

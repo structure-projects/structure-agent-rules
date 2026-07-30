@@ -1,0 +1,65 @@
+---
+description: Tauri 代码评审约束
+globs: "**/*.rs,**/src-tauri/**/*,**/*.ts,**/*.tsx,**/*.vue,**/*.svelte"
+alwaysApply: false
+---
+
+# Tauri 代码评审
+
+> 详细评审规范见 `prompts/reviewer.md`。
+
+## 评审清单
+
+### Rust Command 安全性
+
+- [ ] Command 参数使用 Serde 反序列化，需验证
+- [ ] 文件路径操作限制在 `$APPDATA` / 用户指定目录
+- [ ] 无任意路径拼接（目录穿越攻击）
+- [ ] Shell 命令执行使用白名单
+- [ ] 数据库查询使用参数化
+
+### IPC 通信
+
+- [ ] 前端不直接调用系统 API（通过 IPC）
+- [ ] `invoke` 调用有错误处理（`.catch` 或 `try-catch`）
+- [ ] Event 监听器在组件卸载时正确清理
+
+### 前端
+
+- [ ] 不直接使用 `fs`, `path` 等 Node.js 模块（使用 Tauri API）
+- [ ] 大文件处理使用 Rust 端流式读写
+- [ ] 状态管理合理（React Context / Zustand / Pinia）
+- [ ] 窗口状态持久化使用 `tauri-plugin-window-state`
+
+### tauri.conf.json
+
+- [ ] `identifier` 遵循反向域名格式
+- [ ] `build.frontendDist` 指向正确的构建输出目录
+- [ ] `bundle.icon` 各平台图标齐全
+- [ ] CSP 配置严格（无 `unsafe-eval`, 限制 `default-src`）
+
+### Capabilities
+
+- [ ] 每个 capability 文件对应一个功能模块
+- [ ] 权限最小化（不声明未使用的插件）
+- [ ] FS scope 限制合理路径
+- [ ] Shell scope 命令白名单
+
+### 性能
+
+- [ ] 避免在主线程同步处理大文件
+- [ ] 大列表使用虚拟滚动
+- [ ] Rust 端使用 `async` Command（不阻塞主线程）
+- [ ] 前端 bundle 大小合理（< 2MB gzip）
+
+## 评审反馈模板
+
+```
+### 评审: `src-tauri/src/commands/users.rs`
+
+**严重 🔴**: `read_file` command 接受任意 `path` 参数 → 目录穿越风险
+→ 修复: 限制 path 在 `$APPDATA` 下，使用 `canonicalize`
+
+**建议 🟡**: 错误信息使用 `anyhow::Result` 替代 `String`
+→ 建议: 定义 `CommandError` 枚举
+```

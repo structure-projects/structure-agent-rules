@@ -1,0 +1,48 @@
+---
+description: iOS 原生评审规则。审查 PR / diff 时通过 @reviewer 手动调用。
+alwaysApply: false
+---
+
+# iOS 原生评审规则
+
+> 完整见 `prompts/reviewer.md`
+
+## 审查清单
+
+### 架构
+- [ ] MVVM 模式正确，ViewModel 不持有 View
+- [ ] Repository 正确封装数据源
+- [ ] 构造函数注入依赖
+
+### Swift 代码质量
+- [ ] `struct` + `Codable` 数据模型
+- [ ] `enum` UI 状态封装
+- [ ] 无 `try!` / `as!` 强制解包
+- [ ] ViewModel `@MainActor`
+
+### SwiftUI
+- [ ] `LazyVStack` / `List` 列表
+- [ ] `AsyncImage` 处理 loading/error
+- [ ] `NavigationStack` 导航
+- [ ] `.contentShape(Rectangle())`
+
+### 安全
+- [ ] Keychain 存储敏感数据
+- [ ] 密钥通过 `.xcconfig` 注入
+- [ ] ATS 保持默认
+
+### 依赖
+- [ ] SPM 管理所有依赖
+- [ ] 无 CocoaPods / Carthage
+
+### 测试
+- [ ] 新增 ViewModel 有 XCTest
+- [ ] 新增 View 有 XCUITest
+
+## 常见驳回
+1. MVVM 违规（ViewModel 持有 View）
+2. 强制解包（`try!` / `as!`）
+3. 敏感数据存 UserDefaults
+4. 使用废弃 API（`NavigationView`）
+5. 引入 CocoaPods
+6. 缺少权限描述

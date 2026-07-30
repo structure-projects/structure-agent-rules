@@ -1,0 +1,112 @@
+---
+description: Micronaut 测试约束
+globs: **/*Test*.java,**/*Test*.kt,**/src/test/**
+alwaysApply: false
+---
+
+# Micronaut 测试约束
+
+> 本规则适用于 Micronaut 4.x 项目的测试编写。详细测试规范见 `prompts/tester.md`。
+
+## 测试框架
+
+- **JUnit 5**（Jupiter）作为测试引擎
+- **AssertJ** 作为断言库（推荐）
+- **Mockito** 用于单元测试 Mock
+- **Testcontainers** 用于集成测试（数据库、消息队列等）
+
+## 测试注解（MUST）
+
+### 单元测试
+
+```java
+@MicronautTest
+class UserServiceTest {
+
+    @Inject
+    private UserService userService;
+
+    @MockBean(UserRepository.class)
+    private UserRepository userRepository;
+
+    @Test
+    void shouldCreateUser() {
+        CreateUserDTO dto = new CreateUserDTO("张三", "zhangsan@example.com");
+        when(userRepository.save(any(User.class))).thenReturn(new User(1L, dto.getUsername(), dto.getEmail()));
+
+        UserVO result = userService.create(dto);
+
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getUsername()).isEqualTo("张三");
+    }
+}
+```
+
+### 集成测试（数据库）
+
+```java
+@MicronautTest
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class UserRepositoryTest {
+
+    @Inject
+    private UserRepository userRepository;
+
+    @Test
+    void shouldFindByEmail() {
+        User user = new User("张三", "zhangsan@example.com");
+        userRepository.save(user);
+
+        Optional<User> found = userRepository.findByEmail("zhangsan@example.com");
+
+        assertThat(found).isPresent();
+        assertThat(found.get().getUsername()).isEqualTo("张三");
+    }
+}
+```
+
+### HTTP 集成测试
+
+```java
+@MicronautTest
+class UserControllerTest {
+
+    @Inject
+    @Client("/")
+    private HttpClient httpClient;
+
+    @Test
+    void shouldReturnUser() {
+        HttpResponse<UserVO> response = httpClient.toBlocking()
+            .exchange(HttpRequest.GET("/api/v1/users/1"), UserVO.class);
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(response.body().getUsername()).isNotNull();
+    }
+}
+```
+
+## 测试覆盖要求（MUST）
+
+- Controller 层：集成测试覆盖（HTTP 请求/响应）
+- Service 层：单元测试（Mock 依赖）+ 集成测试（关键路径）
+- Repository 层：集成测试（使用 Testcontainers 或 H2）
+- 核心业务逻辑：单元测试覆盖率 ≥ 80%
+
+## 测试命名规范
+
+```
+方法名_场景_期望结果
+例如：findById_userExists_returnUser()
+```
+
+## 检查清单
+
+- [ ] 测试类使用 `@MicronautTest`
+- [ ] Mock 使用 `@MockBean`（而非 Mockito `@Mock`）
+- [ ] 集成测试使用 Testcontainers 或嵌入式数据库
+- [ ] 测试数据使用 Builder 模式或工厂方法
+- [ ] 每个测试方法独立，不依赖执行顺序
+- [ ] 不在测试中使用 `Thread.sleep()`（使用 Awaitility）
+
+详见 [测试规范 prompt](prompts/tester.md)。

@@ -1,0 +1,32 @@
+---
+description: Django 开发规则
+globs: ["**/*.py"]
+alwaysApply: true
+---
+
+# Django 开发者
+
+你是一个 Django 后端开发者，遵循 Django 最佳实践进行编码。
+
+## 核心职责
+
+- 编写 Django Models、DRF Serializers 和 ViewSets
+- 使用 Django ORM 进行数据库操作
+- 实现 Django Admin 管理后台
+- 编写 Celery 异步任务
+- 管理数据库迁移
+
+## 关键规则
+
+1. **MUST** 使用 Django REST Framework 构建 RESTful API。
+2. **MUST** 使用 DRF `ModelSerializer` 进行序列化，`ViewSet` + `Router` 减少样板代码。
+3. **MUST** 使用 `select_related()` 和 `prefetch_related()` 避免 N+1 查询。
+4. **MUST** 使用 Django 内置迁移系统，迁移文件纳入版本控制。
+5. **MUST** 敏感配置从环境变量读取，**禁止**在 `settings.py` 中硬编码。
+6. **MUST** 生产环境：`DEBUG=False`、`SECURE_SSL_REDIRECT=True`、CSRF/HTTPS Cookie。
+7. **MUST** 使用 `permission_classes` 控制 DRF 端点访问权限。
+8. **MUST** 使用 `django-cors-headers` 管理 CORS，**禁止** `CORS_ALLOW_ALL_ORIGINS=True`（生产环境）。
+9. **禁止** 在 `async def` 中调用同步阻塞 I/O。
+10. **禁止** 在模板中使用 `|safe` 过滤器处理用户输入。
+
+详细规则见：`prompts/developer.md`

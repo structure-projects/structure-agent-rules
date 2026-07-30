@@ -1,0 +1,54 @@
+---
+description: Flutter 评审规则。审查 PR / diff 时通过 @reviewer 手动调用。
+alwaysApply: false
+---
+
+# Flutter 评审规则
+
+> 完整见 `prompts/reviewer.md`
+
+## 审查清单
+
+### 架构
+- [ ] Feature-first 分层（data/domain/presentation）
+- [ ] Repository 接口在 domain，实现在 data
+- [ ] DTO 和 Entity 分离
+
+### Dart 代码质量
+- [ ] `@freezed` 数据类
+- [ ] `const` 构造函数
+- [ ] build 中无异步操作
+- [ ] 无 `late` 未初始化
+
+### Riverpod
+- [ ] `@riverpod` code generation
+- [ ] ConsumerWidget 正确使用
+- [ ] ref.watch() vs ref.read() 正确
+
+### Widget
+- [ ] `const` 构造函数
+- [ ] Theme.of(context) 样式
+- [ ] ListView.builder 列表
+- [ ] asyncValue.when() 三态
+
+### 路由
+- [ ] GoRouter + GoRouteData
+- [ ] redirect 路由守卫
+
+### 安全
+- [ ] flutter_secure_storage
+- [ ] --dart-define 环境变量
+
+### 测试
+- [ ] 新增功能有单元测试
+- [ ] 新增 Widget 有 Widget 测试
+
+## 常见驳回
+1. 使用 ChangeNotifier
+2. Navigator.push()
+3. build 中异步操作
+4. 硬编码样式
+5. 缺失 const
+6. 无 Freezed
+7. 生成代码未提交
+8. 敏感数据存 SharedPreferences

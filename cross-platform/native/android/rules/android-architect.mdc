@@ -1,0 +1,34 @@
+---
+description: Android 原生架构规则。涉及 MVVM、Compose、导航、DI 等架构选型时触发。
+globs:
+  - "**/build.gradle.kts"
+  - "**/libs.versions.toml"
+  - "**/di/**"
+  - "**/App.kt"
+  - "**/MainActivity.kt"
+alwaysApply: false
+---
+
+# Android 原生架构规则
+
+> 完整见 `prompts/architect.md`
+
+## 架构模式
+- **MUST** MVVM + Repository 模式
+- **MUST** ViewModel + StateFlow 管理 UI 状态
+- **MUST** Hilt 依赖注入（`@HiltAndroidApp`、`@AndroidEntryPoint`、`@HiltViewModel`）
+
+## UI 架构
+- **MUST** Jetpack Compose + Material 3（新代码）
+- **MUST** Navigation Component（`NavHost` + `composable()`）
+- **MUST** `collectAsStateWithLifecycle()` 收集 StateFlow
+
+## 数据层
+- Room（结构化）+ DataStore（键值对）
+- Retrofit + OkHttp + Kotlin Serialization
+- Repository 封装数据源
+
+## 构建
+- Gradle Kotlin DSL + Version Catalog
+- R8/ProGuard release 混淆
+- debug/release 独立 applicationId

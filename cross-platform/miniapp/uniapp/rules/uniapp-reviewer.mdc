@@ -1,0 +1,53 @@
+---
+description: UniApp 前端评审规则。审查 PR / diff 时通过 @reviewer 手动调用。
+alwaysApply: false
+---
+
+# UniApp 前端评审规则
+
+> 完整见 `prompts/reviewer.md`
+
+## 审查清单
+
+### 组件
+- [ ] `<script setup lang="ts">`
+- [ ] Props/Emits 完整 TS 类型
+- [ ] 样式 `rpx` 单位 + scoped
+- [ ] 使用 UniApp 组件（非 HTML 标签）
+
+### 平台适配
+- [ ] 平台差异代码用条件编译
+- [ ] 小程序 API 在条件编译块中
+- [ ] H5 兼容移动端
+
+### 路由
+- [ ] `pages.json` 配置正确
+- [ ] 路由跳转用 UniApp API
+- [ ] Tab 页用 `switchTab`
+
+### API
+- [ ] 使用封装的 request 函数
+- [ ] 401 跳转登录页
+- [ ] 错误 `uni.showToast`
+
+### 性能
+- [ ] 长列表虚拟滚动
+- [ ] 分包合理配置
+- [ ] 分包不超 2MB
+
+### 安全
+- [ ] Token 安全存储
+- [ ] 敏感数据不通过 URL 传递
+
+### 测试
+- [ ] 新增功能有单元测试
+- [ ] 目标平台验证通过
+
+## 常见驳回
+1. 使用 HTML 标签（div/span/img）
+2. 使用 px 单位
+3. 平台 API 未条件编译
+4. 直接调用 `uni.request`
+5. 使用 Vue Router
+6. 分包超 2MB
+7. 引入新 UI 库未评审
