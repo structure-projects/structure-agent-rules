@@ -7,12 +7,14 @@
 
 ### 角色规则
 
-| 角色 | 单一内容源（canonical） | Claude Code subagent | Cursor rule | 适用阶段 |
-|---|---|---|---|---|
-| 架构/设计 | [`prompts/architect.md`](prompts/architect.md) | [`.claude/agents/architect.md`](.claude/agents/architect.md) | [`.cursor/rules/architect.mdc`](.cursor/rules/architect.mdc) | 选型、模块划分、API 设计 |
-| 开发 | [`prompts/developer.md`](prompts/developer.md) | [`.claude/agents/developer.md`](.claude/agents/developer.md) | [`.cursor/rules/developer.mdc`](.cursor/rules/developer.mdc) | 编码实现 |
-| 测试 | [`prompts/tester.md`](prompts/tester.md) | [`.claude/agents/tester.md`](.claude/agents/tester.md) | [`.cursor/rules/tester.mdc`](.cursor/rules/tester.mdc) | 编写/维护测试 |
-| 评审 | [`prompts/reviewer.md`](prompts/reviewer.md) | [`.claude/agents/reviewer.md`](.claude/agents/reviewer.md) | [`.cursor/rules/reviewer.mdc`](.cursor/rules/reviewer.mdc) | PR / 设计评审 |
+| 角色 | 单一内容源（canonical） | Claude Code | Cursor | Trae | CodeBuddy | 通义灵码 |
+|---|---|---|---|---|---|---|
+| 架构/设计 | [`prompts/architect.md`](prompts/architect.md) | [`.claude/agents/architect.md`](.claude/agents/architect.md) | [`.cursor/rules/architect.mdc`](.cursor/rules/architect.mdc) | [`.trae/rules/architect.md`](.trae/rules/architect.md) | [`.codebuddy/rules/architect.md`](.codebuddy/rules/architect.md) | [`.lingma/rules/architect.md`](.lingma/rules/architect.md) |
+| 开发 | [`prompts/developer.md`](prompts/developer.md) | [`.claude/agents/developer.md`](.claude/agents/developer.md) | [`.cursor/rules/developer.mdc`](.cursor/rules/developer.mdc) | [`.trae/rules/developer.md`](.trae/rules/developer.md) | [`.codebuddy/rules/developer.md`](.codebuddy/rules/developer.md) | [`.lingma/rules/developer.md`](.lingma/rules/developer.md) |
+| 测试 | [`prompts/tester.md`](prompts/tester.md) | [`.claude/agents/tester.md`](.claude/agents/tester.md) | [`.cursor/rules/tester.mdc`](.cursor/rules/tester.mdc) | [`.trae/rules/tester.md`](.trae/rules/tester.md) | [`.codebuddy/rules/tester.md`](.codebuddy/rules/tester.md) | [`.lingma/rules/tester.md`](.lingma/rules/tester.md) |
+| 评审 | [`prompts/reviewer.md`](prompts/reviewer.md) | [`.claude/agents/reviewer.md`](.claude/agents/reviewer.md) | [`.cursor/rules/reviewer.mdc`](.cursor/rules/reviewer.mdc) | [`.trae/rules/reviewer.md`](.trae/rules/reviewer.md) | [`.codebuddy/rules/reviewer.md`](.codebuddy/rules/reviewer.md) | [`.lingma/rules/reviewer.md`](.lingma/rules/reviewer.md) |
+
+**Trae 入口文件**：`.trae/rules/project_rules.md` 是 Trae 自动识别的项目规则入口，包含使用前必读指引与生态硬约束速查。
 
 ### 专题规则（跨角色共享）
 
@@ -20,6 +22,12 @@
 |---|---|---|
 | **项目创建约束** | [`prompts/project-scaffolding.md`](prompts/project-scaffolding.md) | 创建新项目/新模块时的选型、坐标、模块布局、初始提交物 |
 | **组件使用与配置** | [`prompts/components.md`](prompts/components.md) | 各组件（structure-common / infra / security / tenant / datascope / gateway / boot / cloud）的 API、配置项、典型用法 |
+
+### 自包含模板（独立使用，不依赖 prompts/）
+
+| 文件 | 用途 |
+|---|---|
+| [`codex/AGENTS.md`](codex/AGENTS.md) | **业务项目 Codex / 通用 AI Agent 规则模板**。包含全部 MUST 级规则，拷到业务项目根目录即可被 Codex 自动加载。⚠️ 修改 `prompts/developer.md` 中 MUST 级规则时需同步此文件 |
 
 ## 使用方式
 
@@ -30,6 +38,25 @@
 ### Cursor
 - 将 `.cursor/rules/*.mdc` 拷到目标项目的 `.cursor/rules/` 即可自动加载。
 - `developer.mdc` 设置了 `alwaysApply: true`，其他角色按 `globs` 触发。
+
+### Trae
+- 将 `.trae/rules/*.md` 拷到目标项目的 `.trae/rules/`；`project_rules.md` 是 Trae 自动识别的入口。
+- 可选：在 Trae 设置 → Rules 中粘贴 `prompts/<role>.md` 作为个人规则（不推荐，无法按项目区分）。
+
+### CodeBuddy
+- 将 `.codebuddy/rules/*.md` 拷到目标项目的 `.codebuddy/rules/`。
+- `developer.md` 设置 `alwaysApply: true`；`architect.md` / `tester.md` 按 `paths` 触发；`reviewer.md` 通过 `@reviewer` 手动调用。
+- 项目级规则覆盖用户级同名规则。
+
+### 通义灵码
+- 将 `.lingma/rules/*.md` 拷到目标项目的 `.lingma/rules/`。
+- 在 Lingma IDE 设置 → 规则 中配置各文件的生效方式：`developer.md` 设为"始终生效"，`architect.md` / `tester.md` 设为"模型决策"或"指定文件生效"，`reviewer.md` 设为"手动引入"。
+- 单文件 ≤10000 字符，超出自动截断。
+
+### Codex / 通用 AI Agent
+- 将 `codex/AGENTS.md` 拷到业务项目根目录（文件名必须为 `AGENTS.md`）。
+- Codex 自动加载：项目级 `./AGENTS.md` > 用户级 `~/.codex/AGENTS.md`；子目录嵌套 `AGENTS.md` 可覆盖。
+- 本模板 **自包含**，无需拷贝 `prompts/`。
 
 ### 其他 AI（GPT / 通义 / 文心 / 自建 Agent）
 - 直接把 `prompts/<role>.md` 的完整内容作为 system prompt 或上下文喂入。
