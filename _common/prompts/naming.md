@@ -44,6 +44,56 @@
 - **SHOULD** 索引命名：`idx_{表名}_{字段}`（如 `idx_user_email`）；唯一索引 `uk_{表名}_{字段}`。
 - **SHOULD** 时间字段：创建时间 `created_at`，更新时间 `updated_at`。
 
+## Java 注释规范
+
+> 适用于所有 Java 技术栈项目。
+
+### 类头注释（MUST）
+
+每个类 MUST 包含 `@author`（作者）、`@version`（模块版本号）、`@since`（创建时的 JDK 版本与日期）：
+
+```java
+/**
+ * 用户管理服务实现
+ *
+ * @author zhangsan
+ * @version 1.2.0
+ * @since JDK 17 2025-07-31
+ */
+@Service
+public class UserServiceImpl implements IUserService {
+    // ...
+}
+```
+
+- **MUST** `@version` 与项目版本号同步，版本发布时更新。
+- **SHOULD** `@since` 记录类首次创建时的 JDK 版本和创建日期，后续不修改。
+
+### 方法注释（MUST）
+
+每个 public/protected 方法 MUST 包含 JavaDoc：
+
+```java
+/**
+ * 根据用户 ID 查询用户信息
+ *
+ * @param userId 用户 ID
+ * @return 用户视图对象，不存在返回 null
+ */
+public UserVO findById(Long userId) {
+    // ...
+}
+```
+
+- **MUST** `@param` 描述每个参数的含义与约束。
+- **MUST** `@return` 描述返回值的含义与可能为 null 的情况。
+- **SHOULD** 复杂业务逻辑在方法注释中补充简要说明（1-2 句）。
+
+### 注释语言
+
+- **SHOULD** 注释使用中文，与项目文档语言保持一致。
+- **MAY** 底层公共库（common/infra）使用英文注释。
+
 ## 禁止事项
 
 - **禁止** 拼音命名或中英混用。

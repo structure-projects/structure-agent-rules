@@ -281,7 +281,7 @@ jobs:
 ## 6. 发布前检查清单
 
 - [ ] `test.yml` 全部通过（push / PR 触发）？
-- [ ] 发布版本号符合语义化版本（`x.y.z`），与 `${revision}` 一致？
+- [ ] 发布版本号符合 3 段式语义化版本规范（详见 [`_common/prompts/version-management.md`](../../../../_common/prompts/version-management.md)），与 `${revision}` 一致？
 - [ ] **不发布的模块**（`boot` / `sample` / `example`）在其 **自身 pom.xml** 中已声明 `<maven.deploy.skip>true</maven.deploy.skip>`？
 - [ ] `build-and-push.yml` 镜像 tag 同时包含 `{version}` 与 `latest`？
 - [ ] `publish.yml` 的 npm 版本号从 tag 提取（非手工维护）？

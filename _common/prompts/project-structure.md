@@ -48,8 +48,11 @@ project-root/
 ├── {domain}/                 # 领域模块（domain/core/model）
 ├── {infra}/                  # 基础设施模块（infra/infrastructure）
 ├── {common}/                 # 公共模块（common/shared/base）
-├── docs/                     # 设计文档
-│   └── {PROJECT}_DESIGN.md
+├── docs/                     # 设计文档（详见 documentation.md）
+│   ├── overview.md           #   概要设计（项目定位+架构+技术栈+能力边界）
+│   ├── features/             #   详细设计目录（每个功能一个 md）
+│   ├── {version}/            #   版本快照（overview + features + changelog）
+│   └── README.md             #   文档索引
 ├── scripts/                  # 构建/部署脚本
 ├── .github/workflows/        # CI/CD 流水线
 ├── README.md
@@ -86,6 +89,10 @@ project-root/
 - **MUST** 测试目录镜像源代码目录结构。
 - **MUST** 每个正式项目必须同时具备单元测试和集成测试。
 - **禁止** 在正式项目中保留示例工程（`*-sample` / `*-example`）作为"测试替代品"。
+
+## 文档目录
+
+> 详细规范见 [`documentation.md`](documentation.md)。项目 MUST 在 `docs/` 下维护概要设计、详细设计、版本快照和变更日志。
 
 ## 依赖管理
 
