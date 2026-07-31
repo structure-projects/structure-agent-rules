@@ -62,6 +62,15 @@ public class UserServiceImpl implements IUserService {
 - **SHOULD** 写操作走 `@WriteDelegate`、读操作走 `@ReadDelegate`（来自 `cn.structure.infra.annotations`）。
 - ⚠️ **包路径异常**：`repository-mybatis` 模块下的包当前是 `cn.structured.{X}.repository.repository.*`（双 "repository"）。新代码前 **应向用户确认** 沿用还是修正为 `cn.structured.{X}.repository.mybatis.*`。
 
+### Flyway 迁移文件不可变规则（MUST）
+
+- **MUST** 已提交到版本控制的 Flyway 迁移 SQL 文件（`V{版本}__{描述}.sql`）为 **只读**，**禁止修改**。
+- **原因**：修改已提交的迁移文件会导致数据库版本校验失败（checksum 不一致），启动时报错。
+- **MUST** 所有数据库变更通过 **新增版本文件** 的方式进行。
+  - 示例：`V1.0.0__init.sql`（已提交） → 新增 `V1.0.1__add_user_phone.sql`（变更）
+- **MUST** 新增文件的版本号与项目版本号保持一致。
+- **禁止** 回退已提交迁移文件中的 DDL/DML 变更，如有需要，在新版本文件中执行反向操作。
+
 ## 领域实体与 POJO（规则 4、10）
 
 - **MUST** 领域实体提供 **builder** 能力，**优先 Lombok `@Builder`**（配合 `@Getter` / `@NoArgsConstructor` / `@AllArgsConstructor`）。
@@ -294,7 +303,20 @@ public class InventoryFeignFallback implements InventoryFeign {
 
 详细测试规范见 [`tester.md`](tester.md)。
 
+## 开发前置验证（MUST — 编码前执行）
+
+> 参照 [`_common/prompts/documentation.md`](../../../../_common/prompts/documentation.md) 第「五、AI 开发前置验证」节。
+
+在编写任何代码前，AI **MUST** 按以下顺序完成验证：
+
+1. **确认目标版本号**：确认 X/Y/Z 哪段自增（参照版本管理规范）。
+2. **验证设计文档存在**：检查 `docs/features/` 下是否有对应的详细设计文档。
+3. **确认预期交付**：提取交付物清单并向用户确认。
+4. **禁止**在设计文档不存在或版本号不明确的情况下开始编码。
+
 ## 提交前自检
+
+### 代码规范
 
 - [ ] 包名是否区分 `cn.structure.*`（仅 common/infra）vs `cn.structured.*`（其余全部）？
 - [ ] 工具类是否按 Hutool → 框架 common → 框架其他 → 自定义（限 infra 层）的优先级选择？
@@ -310,7 +332,19 @@ public class InventoryFeignFallback implements InventoryFeign {
 - [ ] 租户上下文是否来自框架而非请求参数？
 - [ ] **服务间调用是否用 `@FeignClient` 且声明了 `fallback`/`fallbackFactory`？强一致性场景 fallback 是否抛 `CommonException`？**
 - [ ] **JSON 序列化是否用 FastJSON（`JSON.toJSONString` / `JSON.parseObject`），未混用 Jackson/Gson？**
+
+### 测试
+
 - [ ] **本次开发的功能是否都有对应单元测试，且 `mvn clean test` 本地全部通过？**
 - [ ] **修改的既有功能，其测试代码是否已同步修改并通过？**
 - [ ] **业务流程完成后是否编写了流程级集成测试（`XxxIT`）并通过？**
 - [ ] **`mvn clean package -DskipTests` 编译是否通过？**
+
+### 版本与文档
+
+- [ ] **目标版本号是否明确？X/Y/Z 自增是否正确？**
+- [ ] **`README.md` 是否与当前版本代码一致？**（技术栈/配置/快速开始/模块说明/版本号等是否过期）
+- [ ] **`docs/features/` 中的详细设计文档是否与代码同步？**
+- [ ] **`docs/{version}/changelog/{序号}.md` 是否已写入本次变更记录？**
+- [ ] **测试结果是否已如实填入 changelog？**
+- [ ] **若涉及架构调整（X 版本递增），`docs/overview.md` 是否已同步更新？**

@@ -115,7 +115,7 @@ list_all_stacks() {
     done
   done
   echo ""
-  echo "通用规则: _common/"
+  echo "通用规则: _common/prompts/ + _common/rules/"
   echo ""
   echo "安装示例:"
   echo "  ./install.sh -t ../my-erp -s structure-boot,vue3 -w cursor,codebuddy"
@@ -127,8 +127,8 @@ list_all_stacks() {
 
 # ====== 安装通用规则 ======
 install_common() {
-  if [ ! -d "$SCRIPT_DIR/_common" ]; then
-    warn "通用规则目录 _common/ 不存在，跳过"
+  if [ ! -d "$SCRIPT_DIR/_common/prompts" ]; then
+    warn "通用规则目录 _common/prompts/ 不存在，跳过"
     return
   fi
 
@@ -137,7 +137,7 @@ install_common() {
 
   local copied=0
   COMMON_FILES=""
-  for f in "$SCRIPT_DIR"/_common/*.md; do
+  for f in "$SCRIPT_DIR"/_common/prompts/*.md; do
     if [ -f "$f" ]; then
       cp "$f" "$common_dest/"
       COMMON_FILES="${COMMON_FILES}${common_dest}/$(basename "$f") "
@@ -146,9 +146,107 @@ install_common() {
   done
 
   if [ "$copied" -gt 0 ]; then
-    success "_common → prompts/_common/ ($copied files)"
+    success "_common/prompts → prompts/_common/ ($copied files)"
     _build_common_ref
   fi
+
+  # 安装 _common rules 到各 AI 工具目录（直接加载，alwaysApply 规则）
+  if ls "$SCRIPT_DIR/_common/rules"/*.mdc >/dev/null 2>&1; then
+    local installed_rules=0
+    for tool in ${TOOLS//,/ }; do
+      case "$tool" in
+        all)
+          _install_common_rules "claude" && installed_rules=$((installed_rules + 1))
+          _install_common_rules "cursor" && installed_rules=$((installed_rules + 1))
+          _install_common_rules "codebuddy" && installed_rules=$((installed_rules + 1))
+          _install_common_rules "trae" && installed_rules=$((installed_rules + 1))
+          _install_common_rules "lingma" && installed_rules=$((installed_rules + 1))
+          break
+          ;;
+        claude|cursor|codebuddy|trae|lingma)
+          _install_common_rules "$tool" && installed_rules=$((installed_rules + 1))
+          ;;
+      esac
+    done
+    [ "$installed_rules" -gt 0 ] && success "_common/rules → $installed_rules tool(s)"
+  fi
+}
+
+# 安装 _common rules 到单个 AI 工具（与栈规则一致：从 .mdc 按工具格式转换）
+_install_common_rules() {
+  local tool="$1"
+  local rules_src="$SCRIPT_DIR/_common/rules"
+  local dest_dir
+
+  case "$tool" in
+    claude)    dest_dir="$TARGET/.claude/agents" ;;
+    cursor)    dest_dir="$TARGET/.cursor/rules" ;;
+    codebuddy) dest_dir="$TARGET/.codebuddy/rules" ;;
+    trae)      dest_dir="$TARGET/.trae/rules" ;;
+    lingma)    dest_dir="$TARGET/.lingma/rules" ;;
+    *)         return 1 ;;
+  esac
+
+  mkdir -p "$dest_dir"
+
+  for f in "$rules_src"/*.mdc; do
+    [ ! -f "$f" ] && continue
+    local fname=$(basename "$f" .mdc)
+    local display_name="${fname#common-}"  # common-git → git
+
+    # 提取 frontmatter 字段
+    local desc always
+    desc=$(awk '/^---$/ {c++; next} c==1 && /^description:/ {sub(/^description:[[:space:]]*/,""); print; exit}' "$f")
+    always=$(awk '/^---$/ {c++; next} c==1 && /^alwaysApply:/ {sub(/^alwaysApply:[[:space:]]*/,""); print; exit}' "$f")
+    always="${always:-false}"
+
+    # 提取正文，并把模板里的 prompts/X.md 重写为 prompts/_common/X.md（与 convert_mdc 一致）
+    local body
+    body=$(awk 'BEGIN{c=0} /^---$/ {c++; next} c>=2' "$f" \
+      | sed -E "s|prompts/([a-z][a-z-]*\.md)|prompts/_common/\1|g")
+
+    case "$tool" in
+      cursor)
+        # Cursor: 直接拷贝 .mdc（保留完整 frontmatter：globs + alwaysApply + description）
+        cp "$f" "$dest_dir/${fname}.mdc"
+        ;;
+      codebuddy)
+        # CodeBuddy: 去掉 globs，只保留 alwaysApply + description，扩展名转 .md
+        {
+          echo "---"
+          echo "alwaysApply: $always"
+          echo "description: $desc"
+          echo "---"
+          echo ""
+          echo "$body"
+        } > "$dest_dir/${fname}.md"
+        ;;
+      claude)
+        # Claude: 生成 Agent 文件（name + description + tools frontmatter + Agent 身份声明）
+        {
+          echo "---"
+          echo "name: $fname"
+          echo "description: $desc"
+          echo "tools: Read, Write, Edit, Grep, Glob, Bash"
+          echo "---"
+          echo ""
+          echo "你是通用规范（_common）的 ${display_name} Agent。"
+          echo ""
+          echo "**首要动作**：在开始操作前，先用 Read 加载 \`prompts/_common/${display_name}.md\`（完整规范）。以下为操作要点："
+          echo ""
+          echo "$body"
+          echo ""
+          echo "完整规则以 \`prompts/_common/${display_name}.md\` 为准。"
+        } > "$dest_dir/${fname}.md"
+        ;;
+      trae|lingma)
+        # Trae/Lingma: 去掉所有 frontmatter，只输出正文，扩展名转 .md
+        echo "$body" > "$dest_dir/${fname}.md"
+        ;;
+    esac
+  done
+
+  return 0
 }
 
 # ====== 安装单个规则栈 ======
@@ -527,19 +625,13 @@ merge_codex() {
     fi
   done
 
-  # 如果安装了 _common，追加清单章节（仅文件名 + 路径指向，不 cat 全内容）
-  if [ -n "${COMMON_FILES:-}" ]; then
+  # 合并 _common/codex/AGENTS.md（与栈规则一致：从 codex/AGENTS.md 读取并做路径重写）
+  if [ "$INSTALL_COMMON" = true ] && [ -f "$SCRIPT_DIR/_common/codex/AGENTS.md" ]; then
     {
       echo "## _common"
       echo ""
-      echo "通用规范已安装于 \`prompts/_common/\`，在编码决策前应加载对应文件："
-      echo ""
-      local f fname title
-      for f in ${COMMON_FILES}; do
-        fname=$(basename "$f")
-        title=$(_get_title "$f")
-        echo "- \`prompts/_common/${fname}\`: ${title}"
-      done
+      tail -n +2 "$SCRIPT_DIR/_common/codex/AGENTS.md" \
+        | sed -E "s|prompts/([a-z][a-z-]*\.md)|prompts/_common/\1|g"
       echo ""
     } >> "$out"
   fi
@@ -755,7 +847,7 @@ main() {
   [ "$_st" = true ]  && echo "   trae:       .trae/rules/"
   [ "$_sl" = true ]  && echo "   lingma:     .lingma/rules/"
   [ "$_sx" = true ]  && echo "   codex:      AGENTS.md"
-  [ "$INSTALL_COMMON" = true ] && echo "   common:     prompts/_common/"
+  [ "$INSTALL_COMMON" = true ] && echo "   common:     prompts/_common/ + rules"
   echo ""
 }
 

@@ -84,6 +84,12 @@ structure-{X}/
 
 - [ ] 完整模块骨架（即使部分模块为空）
 - [ ] `README.md`：项目定位、技术栈、模块说明、快速开始、配置说明（**与代码同步**，不写超前于代码的内容）
+- [ ] **`docs/` 文档骨架**（详见 [`_common/prompts/documentation.md`](../../../../_common/prompts/documentation.md)）：
+  - [ ] `docs/overview.md` — 项目概要设计
+  - [ ] `docs/features/` — 功能详细设计目录（至少包含一个示例功能文档）
+  - [ ] `docs/README.md` — 文档索引
+  - [ ] `docs/1.0.0/changelog/` — 初始版本变更日志目录（含 `001.md` 初始创建记录）
+  - [ ] `docs/1.0.0/overview.md` — 初始版本概要设计快照
 - [ ] 父 POM + 各模块 POM
 - [ ] 至少一个端到端示例（Entity → Repository → Service → Controller → 单测），作为后续开发参考
 - [ ] **单元测试（`XxxTest`）与集成测试（`XxxIT`，Testcontainers）各至少一个**，且 `mvn clean test` 通过

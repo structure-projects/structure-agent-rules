@@ -66,16 +66,18 @@
 
 | 文件 | 说明 |
 |---|---|
-| [_common/git.md](_common/git.md) | Git 分支策略与 Commit 规范 |
-| [_common/code-review.md](_common/code-review.md) | Code Review 通用原则 |
-| [_common/naming.md](_common/naming.md) | 通用命名规范（跨语言） |
-| [_common/api-design.md](_common/api-design.md) | RESTful API 设计原则 |
-| [_common/security.md](_common/security.md) | OWASP 安全基线 |
-| [_common/error-handling.md](_common/error-handling.md) | 错误处理公约 |
-| [_common/logging.md](_common/logging.md) | 日志规范 |
-| [_common/testing.md](_common/testing.md) | 测试策略 |
-| [_common/architecture.md](_common/architecture.md) | 分层架构通用原则 |
-| [_common/project-structure.md](_common/project-structure.md) | 项目结构约定 |
+| [_common/prompts/git.md](_common/prompts/git.md) | Git 分支策略与 Commit 规范 |
+| [_common/prompts/version-management.md](_common/prompts/version-management.md) | 3 段式语义化版本管理 |
+| [_common/prompts/documentation.md](_common/prompts/documentation.md) | 文档管理规范（概要/详细设计+版本快照+变更日志+AI 开发前置验证） |
+| [_common/prompts/code-review.md](_common/prompts/code-review.md) | Code Review 通用原则 |
+| [_common/prompts/naming.md](_common/prompts/naming.md) | 通用命名规范（跨语言） |
+| [_common/prompts/api-design.md](_common/prompts/api-design.md) | RESTful API 设计原则 |
+| [_common/prompts/security.md](_common/prompts/security.md) | OWASP 安全基线 |
+| [_common/prompts/error-handling.md](_common/prompts/error-handling.md) | 错误处理公约 |
+| [_common/prompts/logging.md](_common/prompts/logging.md) | 日志规范 |
+| [_common/prompts/testing.md](_common/prompts/testing.md) | 测试策略 |
+| [_common/prompts/architecture.md](_common/prompts/architecture.md) | 分层架构通用原则 |
+| [_common/prompts/project-structure.md](_common/prompts/project-structure.md) | 项目结构约定 |
 
 ## 全栈方案速查
 
@@ -115,7 +117,7 @@ my-project/
 ├── prompts/                    # 完整规则文件
 │   ├── structure-boot/         # 后端规则
 │   ├── vue3/                   # 前端规则
-│   └── _common/                # 通用规则（-c 选项）
+│   └── _common/prompts/         # 通用规则（-c 选项）
 ├── .cursor/rules/              # Cursor 自动加载
 ├── .codebuddy/rules/           # CodeBuddy 自动加载
 ├── .claude/agents/             # Claude Code Agents
