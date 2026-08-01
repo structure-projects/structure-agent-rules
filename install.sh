@@ -16,6 +16,8 @@ LIST_MODE=false
 DRY_RUN=false
 INSTALL_SKILLS=true
 INSTALL_HOOKS=true
+UNINSTALL_MODE=false
+FORCE=false
 
 # ====== 颜色 ======
 RED='\033[0;31m'
@@ -867,6 +869,8 @@ usage() {
   echo "  --list                   列出所有可用技术栈"
   echo "  -i, --interactive        交互模式"
   echo "  --dry-run                仅展示将要执行的操作"
+  echo "  -u, --uninstall          卸载模式：从目标项目移除已安装的规则/技能/hooks"
+  echo "  -f, --force              卸载时跳过确认"
   echo "  -h, --help               显示帮助"
   echo ""
   echo "示例:"
@@ -966,6 +970,167 @@ interactive_mode() {
   fi
 }
 
+# ====== 卸载 ======
+# 按安装逆序清理：rules → skills → prompts → hooks → AGENTS.md
+# 仅删除本脚本安装的文件（栈前缀 <stack>-* / common-* / 已知 skill 名），不误删用户自定义
+uninstall() {
+  set +e  # 卸载允许 rmdir 失败（目录非空时不中断，uninstall 后 exit 0 不影响安装流程）
+  echo ""
+  echo "==================== 卸载摘要 ===================="
+  echo "目标:   $TARGET"
+  echo "规则栈: $STACKS"
+  echo "工具:   $TOOLS"
+  echo "通用:   $([ "$INSTALL_COMMON" = true ] && echo 'yes' || echo 'no')"
+  echo "技能:   $([ "$INSTALL_SKILLS" = true ] && echo 'yes' || echo 'no')"
+  echo "hooks:  $([ "$INSTALL_HOOKS" = true ] && echo 'yes' || echo 'no')"
+  echo "=================================================="
+  echo ""
+
+  if [ "$FORCE" != true ]; then
+    warn "将移除上述产物，此操作不可恢复"
+    read -r -p "确认卸载? [y/N] " confirm
+    [[ "$confirm" =~ ^[Yy]$ ]] || { info "已取消卸载"; exit 0; }
+  fi
+
+  local name t tt rdir sdir hf removed=0
+  local all_tools="cursor codebuddy claude trae lingma codex"
+
+  # 1. 按栈删除 rules（<stack>-* 前缀）+ prompts/<stack>/
+  for name in ${STACKS//,/ }; do
+    name="${name## }"; name="${name%% }"
+    for t in ${TOOLS//,/ }; do
+      case "$t" in
+        all) for tt in $all_tools; do _rm_stack_rules "$TARGET" "$tt" "$name"; done ;;
+        *) _rm_stack_rules "$TARGET" "$t" "$name" ;;
+      esac
+    done
+    sdir="$TARGET/prompts/$name"
+    if [ -d "$sdir" ]; then
+      rm -rf "$sdir"; info "删除 $sdir"; removed=$((removed+1))
+    fi
+  done
+
+  # 2. 删 _common rules（common-* 前缀）+ prompts/_common/
+  if [ "$INSTALL_COMMON" = true ]; then
+    for t in ${TOOLS//,/ }; do
+      case "$t" in
+        all) for tt in $all_tools; do _rm_common_rules "$TARGET" "$tt"; done ;;
+        *) _rm_common_rules "$TARGET" "$t" ;;
+      esac
+    done
+    sdir="$TARGET/prompts/_common"
+    if [ -d "$sdir" ]; then
+      rm -rf "$sdir"; info "删除 $sdir"; removed=$((removed+1))
+    fi
+  fi
+
+  # 3. 删 skills（若启用）
+  if [ "$INSTALL_SKILLS" = true ]; then
+    for t in ${TOOLS//,/ }; do
+      case "$t" in
+        all) for tt in $all_tools; do _rm_skills "$TARGET" "$tt"; done ;;
+        *) _rm_skills "$TARGET" "$t" ;;
+      esac
+    done
+  fi
+
+  # 4. 删空 prompts/ 目录
+  rmdir "$TARGET/prompts" 2>/dev/null && info "删除空目录 prompts/"
+
+  # 5. 删 hooks（若启用，恢复 .bak）
+  if [ "$INSTALL_HOOKS" = true ]; then
+    for h in commit-msg pre-push pre-commit; do
+      hf="$TARGET/.git/hooks/$h"
+      if [ -f "$hf" ]; then
+        rm -f "$hf"
+        if [ -f "$hf.bak" ]; then
+          mv "$hf.bak" "$hf"; info "恢复 $h.bak → $h"
+        else
+          info "删除 hook: $h"; removed=$((removed+1))
+        fi
+      fi
+    done
+  fi
+
+  # 6. 删 AGENTS.md（codex，整体删除）
+  if [[ ",$TOOLS," == *",codex,"* ]] || [[ ",$TOOLS," == *",all,"* ]]; then
+    if [ -f "$TARGET/AGENTS.md" ]; then
+      rm -f "$TARGET/AGENTS.md"; info "删除 AGENTS.md"; removed=$((removed+1))
+    fi
+  fi
+
+  echo ""
+  echo "==================== 卸载完成 ===================="
+  echo "已清理 $removed 项产物"
+  echo ""
+}
+
+# 删除栈 rules（按 <stack>-*.<ext> 前缀，清理空目录）
+_rm_stack_rules() {
+  local target="$1" tool="$2" canonical="$3" rdir ext
+  case "$tool" in
+    cursor)    rdir="$target/.cursor/rules";    ext="mdc" ;;
+    codebuddy) rdir="$target/.codebuddy/rules"; ext="md"  ;;
+    claude)    rdir="$target/.claude/agents";   ext="md"  ;;
+    trae)      rdir="$target/.trae/rules";      ext="md"  ;;
+    lingma)    rdir="$target/.lingma/rules";    ext="md"  ;;
+    codex)     return ;;  # codex 用 AGENTS.md，整体删
+    *) return ;;
+  esac
+  [ -d "$rdir" ] || return
+  rm -f "$rdir"/${canonical}-*.${ext}
+  rmdir "$rdir" 2>/dev/null && info "删除空目录 ${rdir#$target/}"
+}
+
+# 删除 _common rules（common-*.<ext> 前缀）
+_rm_common_rules() {
+  local target="$1" tool="$2" rdir ext
+  case "$tool" in
+    cursor)    rdir="$target/.cursor/rules";    ext="mdc" ;;
+    codebuddy) rdir="$target/.codebuddy/rules"; ext="md"  ;;
+    claude)    rdir="$target/.claude/agents";   ext="md"  ;;
+    trae)      rdir="$target/.trae/rules";      ext="md"  ;;
+    lingma)    rdir="$target/.lingma/rules";    ext="md"  ;;
+    codex)     return ;;
+    *) return ;;
+  esac
+  [ -d "$rdir" ] || return
+  rm -f "$rdir"/common-*.${ext}
+  rmdir "$rdir" 2>/dev/null && info "删除空目录 ${rdir#$target/}"
+}
+
+# 删除 skills（_common 保持原名 git-commit；栈 skill 为 <stack>-<skill>）
+_rm_skills() {
+  local target="$1" tool="$2"
+  case "$tool" in
+    cursor)
+      rm -f "$target/.cursor/rules/git-commit.mdc"
+      rm -f "$target/.cursor/rules/"*-git-commit.mdc 2>/dev/null
+      rmdir "$target/.cursor/rules" 2>/dev/null && info "删除空目录 .cursor/rules"
+      ;;
+    codebuddy)
+      rm -f "$target/.codebuddy/rules/git-commit.md"
+      rm -f "$target/.codebuddy/rules/"*-git-commit.md 2>/dev/null
+      rmdir "$target/.codebuddy/rules" 2>/dev/null && info "删除空目录 .codebuddy/rules"
+      ;;
+    lingma)
+      rm -f "$target/.lingma/rules/git-commit.md"
+      rm -f "$target/.lingma/rules/"*-git-commit.md 2>/dev/null
+      rmdir "$target/.lingma/rules" 2>/dev/null && info "删除空目录 .lingma/rules"
+      ;;
+    claude)
+      rm -rf "$target/.claude/skills/git-commit" 2>/dev/null
+      rmdir "$target/.claude/skills" 2>/dev/null && info "删除空目录 .claude/skills"
+      ;;
+    trae)
+      rm -rf "$target/.trae/skills/git-commit" 2>/dev/null
+      rmdir "$target/.trae/skills" 2>/dev/null && info "删除空目录 .trae/skills"
+      ;;
+    codex) return ;;  # codex skill 嵌入 AGENTS.md，删 AGENTS.md 即可
+    *) return ;;
+  esac
+}
+
 # ====== 主流程 ======
 parse_args() {
   while [[ $# -gt 0 ]]; do
@@ -979,6 +1144,8 @@ parse_args() {
       --list) LIST_MODE=true; shift ;;
       -i|--interactive) INTERACTIVE=true; shift ;;
       --dry-run) DRY_RUN=true; shift ;;
+      -u|--uninstall) UNINSTALL_MODE=true; shift ;;
+      -f|--force) FORCE=true; shift ;;
       -h|--help) usage; exit 0 ;;
       *) error "未知参数: $1" ;;
     esac
@@ -1010,6 +1177,12 @@ main() {
       TARGET="$(cd "$TARGET" && pwd)"
     }
   }
+
+  # 卸载模式：跳过安装，直接清理
+  if [ "$UNINSTALL_MODE" = true ]; then
+    uninstall
+    exit 0
+  fi
 
   echo ""
   echo "==================== 安装摘要 ===================="

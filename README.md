@@ -21,6 +21,9 @@
 
 # 只要规则，不要 skills/hooks
 ./install.sh -t ../my-project -s structure-boot -w trae -c --no-skills --no-hooks
+
+# 卸载（从目标项目移除已安装的规则/技能/hooks，保留用户自定义）
+./install.sh -t ../my-project -s structure-boot -w all -c -u -f
 ```
 
 ## 三层架构
@@ -88,6 +91,8 @@ my-project/
 | `--list` | 列出所有可用技术栈 |
 | `--no-skills` | 跳过 L1 技能层 |
 | `--no-hooks` | 跳过 L2 校验层（目标非 git 仓库时自动跳过） |
+| `-u`, `--uninstall` | 卸载模式：移除已安装的规则/技能/hooks（只删本脚本安装的，保留用户自定义） |
+| `-f`, `--force` | 卸载时跳过确认 |
 
 ## 各 AI 工具触发机制
 
