@@ -1,13 +1,7 @@
 ---
 description: Next.js 前端开发约束。编写 Next.js/React/TS 代码时始终生效。
-globs:
-  - "**/*.tsx"
-  - "**/*.ts"
-  - "**/app/**"
-  - "**/middleware.ts"
-  - "**/package.json"
-  - "**/next.config.*"
-alwaysApply: true
+globs: "**/*.tsx, **/*.ts, **/app/**, **/middleware.ts, **/package.json, **/next.config.*"
+alwaysApply: false
 ---
 
 # Next.js 前端开发规则

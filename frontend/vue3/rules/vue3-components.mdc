@@ -1,8 +1,6 @@
 ---
 description: Vue 3 组件使用规范。涉及 @structure-projects/components、element-plus、gateway-client、wujie-subapp 时触发。
-globs:
-  - "**/*.vue"
-  - "**/package.json"
+globs: "**/*.vue, **/package.json"
 alwaysApply: false
 ---
 

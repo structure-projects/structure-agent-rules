@@ -1,12 +1,6 @@
 ---
 description: Electron 测试规则。编写测试代码时触发。
-globs:
-  - "**/*.spec.ts"
-  - "**/*.test.ts"
-  - "**/*.test.tsx"
-  - "**/test/**"
-  - "**/__tests__/**"
-  - "**/e2e/**"
+globs: "**/*.spec.ts, **/*.test.ts, **/*.test.tsx, **/test/**, **/__tests__/**, **/e2e/**"
 alwaysApply: false
 ---
 

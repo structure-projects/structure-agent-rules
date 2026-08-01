@@ -1,6 +1,6 @@
 ---
 description: Flask 架构设计规则
-globs: ["**/*.py"]
+globs: "**/*.py"
 alwaysApply: false
 ---
 

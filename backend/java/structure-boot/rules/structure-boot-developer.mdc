@@ -1,10 +1,7 @@
 ---
-description: structure-projects 生态开发约束。编写 Java/前端代码时始终生效。
-globs:
-  - "**/*.java"
-  - "**/*.kt"
-  - "**/pom.xml"
-alwaysApply: true
+description: structure-projects 生态 Java/Kotlin 开发约束。编辑 Java/Kotlin 源码或 pom.xml 时自动加载,涵盖包名红线、分层、Controller/Delegate/Feign/事件规程。
+globs: "**/*.java, **/*.kt, **/pom.xml"
+alwaysApply: false
 ---
 
 # structure-projects 开发规则

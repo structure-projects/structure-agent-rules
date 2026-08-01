@@ -1,12 +1,7 @@
 ---
 description: Android 原生开发约束。编写 Kotlin/Compose 代码时始终生效。
-globs:
-  - "**/*.kt"
-  - "**/*.kts"
-  - "**/build.gradle.kts"
-  - "**/libs.versions.toml"
-  - "**/AndroidManifest.xml"
-alwaysApply: true
+globs: "**/*.kt, **/*.kts, **/build.gradle.kts, **/libs.versions.toml, **/AndroidManifest.xml"
+alwaysApply: false
 ---
 
 # Android 原生开发规则

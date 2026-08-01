@@ -1,11 +1,6 @@
 ---
 description: structure-projects 生态测试约束。编写测试代码时生效。
-globs:
-  - "**/test/**/*.java"
-  - "**/*Test.java"
-  - "**/*IT.java"
-  - "**/*.test.ts"
-  - "**/*.spec.ts"
+globs: "**/test/**/*.java, **/*Test.java, **/*IT.java, **/*.test.ts, **/*.spec.ts"
 alwaysApply: false
 ---
 

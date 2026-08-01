@@ -1,14 +1,7 @@
 ---
 description: Ionic 开发约束。编写 TypeScript/HTML/SCSS 代码时始终生效。
-globs:
-  - "**/*.ts"
-  - "**/*.html"
-  - "**/*.scss"
-  - "**/*.tsx"
-  - "**/*.jsx"
-  - "**/ionic.config.json"
-  - "**/capacitor.config.ts"
-alwaysApply: true
+globs: "**/*.ts, **/*.html, **/*.scss, **/*.tsx, **/*.jsx, **/ionic.config.json, **/capacitor.config.ts"
+alwaysApply: false
 ---
 
 # Ionic 开发规则

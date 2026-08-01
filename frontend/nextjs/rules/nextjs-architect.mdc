@@ -1,11 +1,6 @@
 ---
 description: Next.js 前端架构规则。涉及 App Router、渲染策略、数据库选型时触发。
-globs:
-  - "**/next.config.*"
-  - "**/middleware.ts"
-  - "**/app/layout.tsx"
-  - "**/app/**/route.ts"
-  - "**/prisma/schema.prisma"
+globs: "**/next.config.*, **/middleware.ts, **/app/layout.tsx, **/app/**/route.ts, **/prisma/schema.prisma"
 alwaysApply: false
 ---
 

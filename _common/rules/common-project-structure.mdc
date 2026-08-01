@@ -1,6 +1,6 @@
 ---
-description: 项目结构约定 - 适用于项目搭建和目录调整
-alwaysApply: true
+description: 项目结构约定。新建项目、调整目录结构、新增模块、讨论分层目录时使用。
+alwaysApply: false
 ---
 
 # 项目结构约定

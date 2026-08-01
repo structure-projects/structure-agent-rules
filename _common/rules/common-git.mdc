@@ -1,6 +1,5 @@
 ---
-description: Git 分支策略与 Commit 规范 - 适用于所有项目
-globs: **/*
+description: Git 分支策略与 Commit 规范 - 适用于所有项目。执行 commit/push/merge 等动作前 MUST 先读本规则自检。
 alwaysApply: true
 ---
 

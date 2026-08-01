@@ -1,12 +1,7 @@
 ---
 description: React Native 开发约束。编写 TSX/TS 代码时始终生效。
-globs:
-  - "**/*.tsx"
-  - "**/*.ts"
-  - "**/app.json"
-  - "**/package.json"
-  - "**/babel.config.js"
-alwaysApply: true
+globs: "**/*.tsx, **/*.ts, **/app.json, **/package.json, **/babel.config.js"
+alwaysApply: false
 ---
 
 # React Native 开发规则

@@ -1,6 +1,6 @@
 ---
 description: Quarkus 测试约束
-globs: **/*Test*.java,**/*Test*.kt,**/src/test/**
+globs: "**/*Test*.java, **/*Test*.kt, **/src/test/**"
 alwaysApply: false
 ---
 

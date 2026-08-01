@@ -46,3 +46,9 @@ logs
 
 ### Maven Flatten Plugin ###
 **/pom-xml-flattened
+
+### AI 工具产物(本仓库工作时生成,不应随规则分发) ###
+.codebuddy/memory/
+.trae/
+.claude/
+.lingma/

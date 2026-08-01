@@ -1,7 +1,7 @@
 ---
 description: Django 开发规则
-globs: ["**/*.py"]
-alwaysApply: true
+globs: "**/*.py"
+alwaysApply: false
 ---
 
 # Django 开发者

@@ -1,11 +1,6 @@
 ---
 description: Ionic 架构规则。涉及 Capacitor 插件、分层架构、路由等架构选型时触发。
-globs:
-  - "**/ionic.config.json"
-  - "**/capacitor.config.ts"
-  - "**/angular.json"
-  - "**/src/app/**"
-  - "**/app.module.ts"
+globs: "**/ionic.config.json, **/capacitor.config.ts, **/angular.json, **/src/app/**, **/app.module.ts"
 alwaysApply: false
 ---
 

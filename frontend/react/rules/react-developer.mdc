@@ -1,12 +1,7 @@
 ---
 description: React 前端开发约束。编写 React/TS/CSS 代码时始终生效。
-globs:
-  - "**/*.tsx"
-  - "**/*.ts"
-  - "**/*.css"
-  - "**/package.json"
-  - "**/vite.config.ts"
-alwaysApply: true
+globs: "**/*.tsx, **/*.ts, **/*.css, **/package.json, **/vite.config.ts"
+alwaysApply: false
 ---
 
 # React 前端开发规则

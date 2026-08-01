@@ -1,11 +1,6 @@
 ---
 description: React 前端架构规则。涉及选型、状态管理、路由、构建配置时触发。
-globs:
-  - "**/vite.config.ts"
-  - "**/router/**"
-  - "**/stores/**"
-  - "**/App.tsx"
-  - "**/main.tsx"
+globs: "**/vite.config.ts, **/router/**, **/stores/**, **/App.tsx, **/main.tsx"
 alwaysApply: false
 ---
 

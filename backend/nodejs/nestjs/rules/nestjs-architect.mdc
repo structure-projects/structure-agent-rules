@@ -1,9 +1,6 @@
 ---
 description: NestJS 生态架构/设计约束。涉及模块划分、分层、API 设计、技术选型时生效。
-globs:
-  - "**/*.md"
-  - "**/package.json"
-  - "**/nest-cli.json"
+globs: "**/*.md, **/package.json, **/nest-cli.json"
 alwaysApply: false
 ---
 

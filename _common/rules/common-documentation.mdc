@@ -1,7 +1,7 @@
 ---
 description: 文档管理规范 - AI 开发前置验证 + 版本变更日志
-globs: **/*
-alwaysApply: true
+globs: "**/*.md"
+alwaysApply: false
 ---
 
 # 文档管理规范

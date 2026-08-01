@@ -1,15 +1,7 @@
 ---
 description: Angular 前端开发约束。编写 Angular/TS/SCSS 代码时始终生效。
-globs:
-  - "**/*.component.ts"
-  - "**/*.component.html"
-  - "**/*.component.scss"
-  - "**/*.service.ts"
-  - "**/app.config.ts"
-  - "**/app.routes.ts"
-  - "**/angular.json"
-  - "**/tsconfig.json"
-alwaysApply: true
+globs: "**/*.component.ts, **/*.component.html, **/*.component.scss, **/*.service.ts, **/app.config.ts, **/app.routes.ts, **/angular.json, **/tsconfig.json"
+alwaysApply: false
 ---
 
 # Angular 前端开发规则

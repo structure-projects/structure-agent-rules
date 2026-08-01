@@ -1,8 +1,6 @@
 ---
 description: Vue 3 前端项目脚手架规则。创建新前端项目/模块时触发。
-globs:
-  - "**/package.json"
-  - "**/vite.config.ts"
+globs: "**/package.json, **/vite.config.ts"
 alwaysApply: false
 ---
 

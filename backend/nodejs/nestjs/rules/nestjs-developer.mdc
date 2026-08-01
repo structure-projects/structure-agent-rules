@@ -1,9 +1,7 @@
 ---
 description: NestJS 生态开发约束。编写 TypeScript 代码时始终生效。
-globs:
-  - "**/*.ts"
-  - "**/package.json"
-alwaysApply: true
+globs: "**/*.ts, **/package.json"
+alwaysApply: false
 ---
 
 # NestJS 开发规则

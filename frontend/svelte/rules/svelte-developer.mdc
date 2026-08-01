@@ -1,13 +1,7 @@
 ---
 description: Svelte 前端开发约束。编写 Svelte/TS/CSS 代码时始终生效。
-globs:
-  - "**/*.svelte"
-  - "**/*.ts"
-  - "**/svelte.config.js"
-  - "**/vite.config.ts"
-  - "**/package.json"
-  - "**/+page.server.ts"
-alwaysApply: true
+globs: "**/*.svelte, **/*.ts, **/svelte.config.js, **/vite.config.ts, **/package.json, **/+page.server.ts"
+alwaysApply: false
 ---
 
 # Svelte 前端开发规则

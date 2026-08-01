@@ -1,6 +1,6 @@
 ---
 description: FastAPI 测试规则
-globs: ["**/test_*.py", "**/conftest.py"]
+globs: "**/test_*.py, **/conftest.py"
 alwaysApply: false
 ---
 

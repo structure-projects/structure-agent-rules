@@ -1,16 +1,7 @@
 ---
 description: Electron 开发约束。编写主进程/渲染进程代码时始终生效。
-globs:
-  - "**/*.js"
-  - "**/*.ts"
-  - "**/*.jsx"
-  - "**/*.tsx"
-  - "**/main.js"
-  - "**/preload.js"
-  - "**/*.html"
-  - "**/forge.config.js"
-  - "**/electron-builder.yml"
-alwaysApply: true
+globs: "**/*.js, **/*.ts, **/*.jsx, **/*.tsx, **/main.js, **/preload.js, **/*.html, **/forge.config.js, **/electron-builder.yml"
+alwaysApply: false
 ---
 
 # Electron 开发规则

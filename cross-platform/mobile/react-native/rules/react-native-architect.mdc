@@ -1,10 +1,6 @@
 ---
 description: React Native 架构规则。涉及导航、状态管理、New Architecture 等架构选型时触发。
-globs:
-  - "**/app.json"
-  - "**/eas.json"
-  - "**/src/app/**"
-  - "**/babel.config.js"
+globs: "**/app.json, **/eas.json, **/src/app/**, **/babel.config.js"
 alwaysApply: false
 ---
 

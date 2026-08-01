@@ -1,9 +1,6 @@
 ---
 description: Flutter 测试规则。编写测试代码时触发。
-globs:
-  - "**/test/**"
-  - "**/integration_test/**"
-  - "**/*_test.dart"
+globs: "**/test/**, **/integration_test/**, **/*_test.dart"
 alwaysApply: false
 ---
 

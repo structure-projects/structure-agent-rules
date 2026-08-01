@@ -1,9 +1,7 @@
 ---
 description: Koa 生态开发约束。编写 JS 代码时始终生效。
-globs:
-  - "**/*.js"
-  - "**/package.json"
-alwaysApply: true
+globs: "**/*.js, **/package.json"
+alwaysApply: false
 ---
 
 # Koa 开发规则

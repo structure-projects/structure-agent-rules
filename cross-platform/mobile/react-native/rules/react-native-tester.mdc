@@ -1,10 +1,6 @@
 ---
 description: React Native 测试规则。编写测试代码时触发。
-globs:
-  - "**/*.test.ts"
-  - "**/*.test.tsx"
-  - "**/e2e/**"
-  - "**/jest.config.js"
+globs: "**/*.test.ts, **/*.test.tsx, **/e2e/**, **/jest.config.js"
 alwaysApply: false
 ---
 

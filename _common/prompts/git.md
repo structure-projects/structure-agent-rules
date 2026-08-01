@@ -2,6 +2,18 @@
 
 > 通用规则，适用范围：所有技术栈和项目类型。
 
+## ⚡ 动作前自检（执行 git 操作前 MUST 执行）
+
+> 声明式规则无法物理阻止 git 动作，以下自检必须在执行前主动完成。若已安装 `_common/checks/commit-msg.sh` hook，不合规提交会被 git 物理拦截。
+
+- **执行 `git commit` 前**，MUST 先校验 commit message 符合 Conventional Commits：
+  - 格式 `<type>(<scope>): <description>`
+  - 合法 type：`feat | fix | docs | style | refactor | test | chore | perf`
+  - 不合规 MUST 先修改 message 再提交，**禁止**直接 `git commit -m "随意内容"`
+- **执行 `git push` 前**，MUST 确认当前分支非 `master`/`develop`（禁止直推主干）。
+- **执行 `git merge` 前**，MUST 确认源分支类型与目标分支匹配（feat→develop，hotfix→master+develop）。
+- **创建分支前**，MUST 使用规范前缀：`feat-` / `fix-` / `release-` / `hotfix-`。
+
 ## 分支模型
 
 ```

@@ -1,11 +1,6 @@
 ---
 description: Vue 3 前端架构规则。涉及选型、微前端、组件分层、状态管理时触发。
-globs:
-  - "**/vite.config.ts"
-  - "**/router/**"
-  - "**/stores/**"
-  - "**/App.vue"
-  - "**/main.ts"
+globs: "**/vite.config.ts, **/router/**, **/stores/**, **/App.vue, **/main.ts"
 alwaysApply: false
 ---
 

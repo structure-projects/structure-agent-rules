@@ -1,6 +1,6 @@
 ---
 description: Micronaut 代码评审约束
-globs: **/*.java,**/build.gradle*,**/build.gradle.kts
+globs: "**/*.java, **/build.gradle*, **/build.gradle.kts"
 alwaysApply: false
 ---
 

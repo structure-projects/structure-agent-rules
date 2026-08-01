@@ -1,13 +1,7 @@
 ---
 description: Vue 3 前端开发约束。编写 Vue/TS/CSS 代码时始终生效。
-globs:
-  - "**/*.vue"
-  - "**/*.ts"
-  - "**/*.tsx"
-  - "**/*.css"
-  - "**/package.json"
-  - "**/vite.config.ts"
-alwaysApply: true
+globs: "**/*.vue, **/*.ts, **/*.tsx, **/*.css, **/package.json, **/vite.config.ts"
+alwaysApply: false
 ---
 
 # Vue 3 前端开发规则

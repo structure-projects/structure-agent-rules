@@ -1,10 +1,6 @@
 ---
 description: iOS 原生架构规则。涉及 MVVM、SwiftUI、导航、数据层等架构选型时触发。
-globs:
-  - "**/*.xcodeproj/**"
-  - "**/Package.swift"
-  - "**/App/**"
-  - "**/Domain/**"
+globs: "**/*.xcodeproj/**, **/Package.swift, **/App/**, **/Domain/**"
 alwaysApply: false
 ---
 

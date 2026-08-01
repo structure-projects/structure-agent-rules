@@ -1,10 +1,6 @@
 ---
 description: Angular 前端架构规则。涉及选型、路由、状态管理、DI 时触发。
-globs:
-  - "**/angular.json"
-  - "**/app.config.ts"
-  - "**/app.routes.ts"
-  - "**/app.component.ts"
+globs: "**/angular.json, **/app.config.ts, **/app.routes.ts, **/app.component.ts"
 alwaysApply: false
 ---
 

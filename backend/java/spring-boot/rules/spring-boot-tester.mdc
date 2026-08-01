@@ -1,9 +1,6 @@
 ---
 description: Spring Boot 测试约束。编写测试代码时生效。
-globs:
-  - "**/test/**/*.java"
-  - "**/*Test.java"
-  - "**/*IT.java"
+globs: "**/test/**/*.java, **/*Test.java, **/*IT.java"
 alwaysApply: false
 ---
 

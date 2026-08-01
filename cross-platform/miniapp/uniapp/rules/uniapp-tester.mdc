@@ -1,9 +1,6 @@
 ---
 description: UniApp 前端测试规则。编写测试代码时触发。
-globs:
-  - "**/*.test.ts"
-  - "**/*.spec.ts"
-  - "**/vitest.config.ts"
+globs: "**/*.test.ts, **/*.spec.ts, **/vitest.config.ts"
 alwaysApply: false
 ---
 

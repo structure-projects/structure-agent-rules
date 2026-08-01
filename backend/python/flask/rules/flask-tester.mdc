@@ -1,6 +1,6 @@
 ---
 description: Flask 测试规则
-globs: ["**/test_*.py", "**/conftest.py", "**/tests/**"]
+globs: "**/test_*.py, **/conftest.py, **/tests/**"
 alwaysApply: false
 ---
 

@@ -1,8 +1,6 @@
 ---
 description: Actix-web 生态架构/设计约束。涉及模块划分、分层、API 设计、技术选型时生效。
-globs:
-  - "**/*.md"
-  - "**/Cargo.toml"
+globs: "**/*.md, **/Cargo.toml"
 alwaysApply: false
 ---
 

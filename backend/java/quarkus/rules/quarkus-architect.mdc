@@ -1,6 +1,6 @@
 ---
 description: Quarkus 架构与设计约束
-globs: **/*.java,**/*.kt,**/pom.xml,**/build.gradle*
+globs: "**/*.java, **/*.kt, **/pom.xml, **/build.gradle*"
 alwaysApply: false
 ---
 

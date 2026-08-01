@@ -1,10 +1,7 @@
 ---
 description: Flutter 开发约束。编写 Dart/Widget 代码时始终生效。
-globs:
-  - "**/*.dart"
-  - "**/pubspec.yaml"
-  - "**/analysis_options.yaml"
-alwaysApply: true
+globs: "**/*.dart, **/pubspec.yaml, **/analysis_options.yaml"
+alwaysApply: false
 ---
 
 # Flutter 开发规则

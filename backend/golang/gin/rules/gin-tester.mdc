@@ -1,7 +1,6 @@
 ---
 description: Gin 生态测试约束。编写测试代码时生效。
-globs:
-  - "**/*_test.go"
+globs: "**/*_test.go"
 alwaysApply: false
 ---
 

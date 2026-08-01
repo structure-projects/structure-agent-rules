@@ -1,10 +1,6 @@
 ---
 description: Flutter 架构规则。涉及 Riverpod、GoRouter、分层架构等架构选型时触发。
-globs:
-  - "**/pubspec.yaml"
-  - "**/analysis_options.yaml"
-  - "**/lib/core/**"
-  - "**/lib/app.dart"
+globs: "**/pubspec.yaml, **/analysis_options.yaml, **/lib/core/**, **/lib/app.dart"
 alwaysApply: false
 ---
 

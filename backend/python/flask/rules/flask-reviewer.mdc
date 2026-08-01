@@ -1,6 +1,6 @@
 ---
 description: Flask 代码审查规则
-globs: ["**/*.py"]
+globs: "**/*.py"
 alwaysApply: false
 ---
 

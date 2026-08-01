@@ -1,11 +1,6 @@
 ---
 description: React 前端测试规则。编写测试代码时触发。
-globs:
-  - "**/*.test.ts"
-  - "**/*.test.tsx"
-  - "**/*.spec.ts"
-  - "**/e2e/**"
-  - "**/vitest.config.ts"
+globs: "**/*.test.ts, **/*.test.tsx, **/*.spec.ts, **/e2e/**, **/vitest.config.ts"
 alwaysApply: false
 ---
 

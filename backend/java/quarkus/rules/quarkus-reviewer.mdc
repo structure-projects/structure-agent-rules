@@ -1,6 +1,6 @@
 ---
 description: Quarkus 代码评审约束
-globs: **/*.java,**/*.kt,**/pom.xml,**/build.gradle*
+globs: "**/*.java, **/*.kt, **/pom.xml, **/build.gradle*"
 alwaysApply: false
 ---
 

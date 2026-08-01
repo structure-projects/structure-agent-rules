@@ -1,9 +1,7 @@
 ---
 description: Axum 生态开发约束。编写 Rust 代码时始终生效。
-globs:
-  - "**/*.rs"
-  - "**/Cargo.toml"
-alwaysApply: true
+globs: "**/*.rs, **/Cargo.toml"
+alwaysApply: false
 ---
 
 # Axum 开发规则

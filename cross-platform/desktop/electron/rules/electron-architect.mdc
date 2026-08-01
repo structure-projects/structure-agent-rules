@@ -1,12 +1,6 @@
 ---
 description: Electron 架构规则。涉及进程模型、IPC、窗口管理、安全等架构选型时触发。
-globs:
-  - "**/main.js"
-  - "**/main.ts"
-  - "**/preload.js"
-  - "**/preload.ts"
-  - "**/electron-builder.yml"
-  - "**/forge.config.js"
+globs: "**/main.js, **/main.ts, **/preload.js, **/preload.ts, **/electron-builder.yml, **/forge.config.js"
 alwaysApply: false
 ---
 

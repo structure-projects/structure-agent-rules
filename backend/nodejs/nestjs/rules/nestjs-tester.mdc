@@ -1,8 +1,6 @@
 ---
 description: NestJS 生态测试约束。编写测试代码时生效。
-globs:
-  - "**/*.spec.ts"
-  - "**/*.e2e-spec.ts"
+globs: "**/*.spec.ts, **/*.e2e-spec.ts"
 alwaysApply: false
 ---
 

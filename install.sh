@@ -14,6 +14,8 @@ INSTALL_COMMON=false
 INTERACTIVE=false
 LIST_MODE=false
 DRY_RUN=false
+INSTALL_SKILLS=true
+INSTALL_HOOKS=true
 
 # ====== 颜色 ======
 RED='\033[0;31m'
@@ -170,6 +172,9 @@ install_common() {
     done
     [ "$installed_rules" -gt 0 ] && success "_common/rules → $installed_rules tool(s)"
   fi
+
+  # 安装 _common skills(L1 技能层)
+  install_skills "$SCRIPT_DIR/_common/skills" "_common"
 }
 
 # 安装 _common rules 到单个 AI 工具（与栈规则一致：从 .mdc 按工具格式转换）
@@ -195,10 +200,11 @@ _install_common_rules() {
     local display_name="${fname#common-}"  # common-git → git
 
     # 提取 frontmatter 字段
-    local desc always
+    local desc always globs
     desc=$(awk '/^---$/ {c++; next} c==1 && /^description:/ {sub(/^description:[[:space:]]*/,""); print; exit}' "$f")
     always=$(awk '/^---$/ {c++; next} c==1 && /^alwaysApply:/ {sub(/^alwaysApply:[[:space:]]*/,""); print; exit}' "$f")
     always="${always:-false}"
+    globs=$(awk '/^---$/ {c++; next} c==1 && /^globs:/ {sub(/^globs:[[:space:]]*/,""); print; exit}' "$f")
 
     # 提取正文，并把模板里的 prompts/X.md 重写为 prompts/_common/X.md（与 convert_mdc 一致）
     local body
@@ -211,10 +217,11 @@ _install_common_rules() {
         cp "$f" "$dest_dir/${fname}.mdc"
         ;;
       codebuddy)
-        # CodeBuddy: 去掉 globs，只保留 alwaysApply + description，扩展名转 .md
+        # CodeBuddy: 保留 alwaysApply + globs + description
         {
           echo "---"
           echo "alwaysApply: $always"
+          [ -n "$globs" ] && echo "globs: $globs"
           echo "description: $desc"
           echo "---"
           echo ""
@@ -240,13 +247,213 @@ _install_common_rules() {
         } > "$dest_dir/${fname}.md"
         ;;
       trae|lingma)
-        # Trae/Lingma: 去掉所有 frontmatter，只输出正文，扩展名转 .md
-        echo "$body" > "$dest_dir/${fname}.md"
+        # Trae/Lingma: 保留 frontmatter(alwaysApply + globs + description),按文件类型精准触发
+        {
+          echo "---"
+          echo "alwaysApply: $always"
+          [ -n "$globs" ] && echo "globs: $globs"
+          echo "description: $desc"
+          echo "---"
+          echo ""
+          echo "$body"
+        } > "$dest_dir/${fname}.md"
         ;;
     esac
   done
 
   return 0
+}
+
+# ====== L1 技能层安装(skills)======
+
+# 命名转换:源 skill 名 → 安装后名(专项 G)
+#   _common 来源:保持原名(如 git-commit)
+#   栈来源:拼接 <stack>-<skill>(如 structure-boot-create-controller)
+_resolve_skill_name() {
+  local skill_name
+  skill_name=$(basename "$1")
+  if [[ "$2" == "_common" ]]; then
+    echo "$skill_name"
+  else
+    echo "${2}-${skill_name}"
+  fi
+}
+
+# 重写 SKILL.md frontmatter 的 name 字段为安装后名
+_rewrite_skill_name() {
+  local skill_file="$1" new_name="$2"
+  awk -v n="$new_name" '
+    BEGIN{c=0} /^---$/{c++; print; next}
+    c==1 && /^name:/ {print "name: " n; next}
+    {print}
+  ' "$skill_file" > "$skill_file.tmp" && mv "$skill_file.tmp" "$skill_file"
+}
+
+# SKILL.md → Cursor/CodeBuddy Agent Requested mdc(alwaysApply:false + description)
+_convert_skill_to_mdc() {
+  local src="$1" out="$2"
+  local desc body
+  desc=$(awk '/^description:/ {sub(/^description:[[:space:]]*/,""); gsub(/^"|"$/,""); print; exit}' "$src")
+  body=$(awk 'BEGIN{c=0} /^---$/ {c++; next} c>=2' "$src")
+  {
+    echo "---"
+    echo "description: $desc"
+    echo "alwaysApply: false"
+    echo "---"
+    echo ""
+    echo "$body"
+  } > "$out"
+}
+
+# 安装 skills 层到各 AI 工具
+# 用法: install_skills <src_skills_dir> <stack_name>
+install_skills() {
+  local skills_src="$1" stack_name="$2"
+  [ -d "$skills_src" ] || return 0
+  [ "$INSTALL_SKILLS" = true ] || return 0
+
+  local tool count=0
+  for tool in ${TOOLS//,/ }; do
+    local t
+    case "$tool" in
+      all) t="trae claude cursor codebuddy lingma" ;;
+      *)   t="$tool" ;;
+    esac
+    local tt
+    for tt in $t; do
+      _install_skills_for_tool "$skills_src" "$stack_name" "$tt" && count=$((count + 1))
+    done
+  done
+  [ "$count" -gt 0 ] && success "skills($stack_name) → $count tool(s)"
+}
+
+_install_skills_for_tool() {
+  local skills_src="$1" stack_name="$2" tool="$3"
+  local skill_dir dst_name
+
+  case "$tool" in
+    trae|claude)
+      local dest_root="$TARGET/.${tool}/skills"
+      mkdir -p "$dest_root"
+      for skill_dir in "$skills_src"/*/; do
+        [ -d "$skill_dir" ] || continue
+        dst_name=$(_resolve_skill_name "$skill_dir" "$stack_name")
+        cp -r "$skill_dir" "$dest_root/$dst_name"
+        [ -f "$dest_root/$dst_name/SKILL.md" ] && _rewrite_skill_name "$dest_root/$dst_name/SKILL.md" "$dst_name"
+      done
+      ;;
+    cursor)
+      local dest_dir="$TARGET/.cursor/rules"
+      mkdir -p "$dest_dir"
+      for skill_dir in "$skills_src"/*/; do
+        [ -d "$skill_dir" ] || continue
+        dst_name=$(_resolve_skill_name "$skill_dir" "$stack_name")
+        [ -f "$skill_dir/SKILL.md" ] && _convert_skill_to_mdc "$skill_dir/SKILL.md" "$dest_dir/${dst_name}.mdc"
+      done
+      ;;
+    codebuddy)
+      local dest_dir="$TARGET/.codebuddy/rules"
+      mkdir -p "$dest_dir"
+      for skill_dir in "$skills_src"/*/; do
+        [ -d "$skill_dir" ] || continue
+        dst_name=$(_resolve_skill_name "$skill_dir" "$stack_name")
+        [ -f "$skill_dir/SKILL.md" ] && _convert_skill_to_mdc "$skill_dir/SKILL.md" "$dest_dir/${dst_name}.md"
+      done
+      ;;
+    lingma)
+      local dest_dir="$TARGET/.lingma/rules"
+      mkdir -p "$dest_dir"
+      for skill_dir in "$skills_src"/*/; do
+        [ -d "$skill_dir" ] || continue
+        dst_name=$(_resolve_skill_name "$skill_dir" "$stack_name")
+        [ -f "$skill_dir/SKILL.md" ] && _convert_skill_to_mdc "$skill_dir/SKILL.md" "$dest_dir/${dst_name}.md"
+      done
+      ;;
+    codex)
+      : # 由 merge_codex 统一合并,这里跳过
+      ;;
+    *) return 1 ;;
+  esac
+  return 0
+}
+
+# 按栈名安装 skills(供 main 循环调用)
+install_stack_skills() {
+  [ "$INSTALL_SKILLS" = true ] || return 0
+  local name="$1" sp cn
+  sp=$(find_stack_path "$name" 2>/dev/null) || return 0
+  cn=$(basename "$sp")
+  install_skills "$sp/skills" "$cn"
+}
+
+# ====== L2 工具层安装(git hooks 物理拦截)======
+
+# 安装 git hooks(commit-msg/pre-push/pre-commit)到目标项目 .git/hooks/
+install_git_hooks() {
+  [ "$INSTALL_HOOKS" = true ] || return 0
+  [ -d "$TARGET/.git" ] || { warn "目标非 git 仓库,跳过 git hooks 安装(可用 --no-hooks 忽略)"; return 0; }
+
+  local checks_src="$SCRIPT_DIR/_common/checks"
+  [ -d "$checks_src" ] || return 0
+
+  local hooks_dir="$TARGET/.git/hooks"
+  local hook installed=0
+  for hook in commit-msg pre-push pre-commit; do
+    local src="$checks_src/${hook}.sh"
+    [ -f "$src" ] || continue
+    local dest="$hooks_dir/${hook}"
+    [ -f "$dest" ] && cp "$dest" "$dest.bak.$(date +%s)"  # 备份已存在
+    cp "$src" "$dest" && chmod +x "$dest" && installed=$((installed + 1))
+  done
+  [ "$installed" -gt 0 ] && success "git hooks → $installed 个($hooks_dir)"
+}
+
+# 安装 L2 校验层(当前仅 git hooks,未来可扩展 ArchUnit/eslint)
+install_checks() {
+  install_git_hooks
+}
+
+# codex 无独立 skill 调用机制,把 skills 正文嵌入 AGENTS.md 作为常驻规程
+append_skills_to_codex() {
+  [ "$INSTALL_SKILLS" = true ] || return 0
+  local agents_file="$TARGET/AGENTS.md"
+  [ -f "$agents_file" ] || return 0
+
+  local content="" name body s
+  # _common skills
+  for s in "$SCRIPT_DIR/_common/skills"/*/SKILL.md; do
+    [ -f "$s" ] || continue
+    name=$(basename "$(dirname "$s")")
+    body=$(awk 'BEGIN{c=0} /^---$/ {c++; next} c>=2' "$s" | sed -E 's|^(#+) |\1### |')
+    content="${content}### 技能：${name}"$'\n\n'"${body}"$'\n\n'
+  done
+  # 栈 skills
+  local stk sp cn
+  for stk in ${STACKS//,/ }; do
+    stk="${stk## }"; stk="${stk%% }"
+    sp=$(find_stack_path "$stk" 2>/dev/null) || continue
+    cn=$(basename "$sp")
+    for s in "$sp/skills"/*/SKILL.md; do
+      [ -f "$s" ] || continue
+      name="${cn}-$(basename "$(dirname "$s")")"
+      body=$(awk 'BEGIN{c=0} /^---$/ {c++; next} c>=2' "$s" | sed -E 's|^(#+) |\1### |')
+      content="${content}### 技能：${name}"$'\n\n'"${body}"$'\n\n'
+    done
+  done
+
+  if [ -n "$content" ]; then
+    {
+      echo ""
+      echo "---"
+      echo ""
+      echo "## 技能规程（Skills）"
+      echo ""
+      echo "> codex 无独立 skill 调用机制，以下技能规程作为常驻指令嵌入，对应动作时必须遵循。"
+      echo ""
+      printf "%s" "$content"
+    } >> "$agents_file"
+    success "codex skills → 嵌入 AGENTS.md"
+  fi
 }
 
 # ====== 安装单个规则栈 ======
@@ -300,12 +507,12 @@ install_stack() {
 
 # ====== 从 rules/*.mdc 转换为其他 AI 工具格式 ======
 # 所有工具规则统一以 rules/*.mdc 为单一模板源，
-# 安装时按以下规则自动派生：
-#   Cursor:    直接拷贝 .mdc（保留 frontmatter）
-#   CodeBuddy: 改 frontmatter（去 globs，保留 alwaysApply+description）
-#   Claude:    改 frontmatter（name+description+tools），加 Agent 身份声明
-#   Trae:      去掉 frontmatter，正文不变
-#   Lingma:    去掉 frontmatter，正文不变
+# 安装时按以下规则自动派生（均保留 frontmatter 触发信息）：
+#   Cursor:    直接拷贝 .mdc（保留完整 frontmatter: globs+alwaysApply+description）
+#   CodeBuddy: 保留 frontmatter（alwaysApply+globs+description），扩展名 .md
+#   Claude:    改 frontmatter（name+description+tools），加 Agent 身份声明（按 description 匹配）
+#   Trae:      保留 frontmatter（alwaysApply+globs+description），扩展名 .md
+#   Lingma:    同 Trae
 
 # 角色名 -> 中文标签
 _role_label() {
@@ -377,6 +584,7 @@ convert_mdc() {
   desc=$(awk '/^---$/ {c++; next} c==1 && /^description:/ {sub(/^description:[[:space:]]*/,""); print; exit}' "$src")
   always=$(awk '/^---$/ {c++; next} c==1 && /^alwaysApply:/ {sub(/^alwaysApply:[[:space:]]*/,""); print; exit}' "$src")
   always="${always:-false}"
+  globs=$(awk '/^---$/ {c++; next} c==1 && /^globs:/ {sub(/^globs:[[:space:]]*/,""); print; exit}' "$src")
 
   # 提取正文（第二个 --- 之后的所有内容），并把模板里的 prompts/X.md 重写为
   # 安装后的实际路径 prompts/<stack>/X.md（业务项目根目录视角）
@@ -394,6 +602,7 @@ convert_mdc() {
       {
         echo "---"
         echo "alwaysApply: $always"
+        [ -n "$globs" ] && echo "globs: $globs"
         echo "description: $desc"
         echo "---"
         echo ""
@@ -422,8 +631,14 @@ convert_mdc() {
       } > "$out"
       ;;
     trae|lingma)
-      # 直接输出正文，不带 frontmatter
+      # 保留 frontmatter(alwaysApply + globs + description),让 trae/lingma 按文件类型精准触发
       {
+        echo "---"
+        echo "alwaysApply: $always"
+        [ -n "$globs" ] && echo "globs: $globs"
+        echo "description: $desc"
+        echo "---"
+        echo ""
         [ -n "$common_ref" ] && echo "$common_ref"
         echo "$body"
       } > "$out"
@@ -475,7 +690,7 @@ install_tool_wrappers() {
 
     # 同名文件覆盖保护：如果已存在且来自不同栈则警告
     if [ -f "$fout" ]; then
-      warn "目标已存在 $fout，将被覆盖"
+      warn "目标已存在 ${fout}，将被覆盖"
     fi
 
     if [ "$tool" = "cursor" ]; then
@@ -759,6 +974,8 @@ parse_args() {
       -s|--stacks) STACKS="$2"; shift 2 ;;
       -w|--with) TOOLS="$2"; shift 2 ;;
       -c|--common) INSTALL_COMMON=true; shift ;;
+      --no-skills) INSTALL_SKILLS=false; shift ;;
+      --no-hooks) INSTALL_HOOKS=false; shift ;;
       --list) LIST_MODE=true; shift ;;
       -i|--interactive) INTERACTIVE=true; shift ;;
       --dry-run) DRY_RUN=true; shift ;;
@@ -821,10 +1038,17 @@ main() {
     name="${name## }"
     name="${name%% }"
     install_stack "$name"
+    install_stack_skills "$name"
   done
 
   # 合并 Codex
   merge_codex
+
+  # codex skills 嵌入 AGENTS.md
+  append_skills_to_codex
+
+  # 安装 L2 校验层(git hooks 物理拦截)
+  install_checks
 
   echo ""
   echo "==================== 安装完成 ===================="
@@ -848,7 +1072,18 @@ main() {
   [ "$_sl" = true ]  && echo "   lingma:     .lingma/rules/"
   [ "$_sx" = true ]  && echo "   codex:      AGENTS.md"
   [ "$INSTALL_COMMON" = true ] && echo "   common:     prompts/_common/ + rules"
+  [ "$INSTALL_SKILLS" = true ] && echo "   skills:     .trae/skills/ 或 .claude/skills/(L1 技能层)"
+  [ "$INSTALL_HOOKS" = true ] && [ -d "$TARGET/.git" ] && echo "   hooks:      .git/hooks/(L2 物理拦截)"
   echo ""
+
+  # Trae 开关提醒:AGENTS.md / CLAUDE.md 默认不读取,需用户手动开开关(专项 C Bug 5)
+  if [ "$_st" = true ]; then
+    echo "⚠️  Trae 用户必读:"
+    echo "   AGENTS.md / CLAUDE.md 默认不进上下文,请前往「设置 > 规则 > 导入设置」,"
+    echo "   打开「将 AGENTS.md 包含在上下文中」「将 CLAUDE.md 包含在上下文中」开关,"
+    echo "   否则规则文件不会自动生效(装了等于没装)。"
+    echo ""
+  fi
 }
 
 main "$@"

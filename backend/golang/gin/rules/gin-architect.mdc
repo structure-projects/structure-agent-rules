@@ -1,9 +1,6 @@
 ---
 description: Gin 生态架构/设计约束。涉及模块划分、分层、API 设计、技术选型时生效。
-globs:
-  - "**/*.md"
-  - "**/go.mod"
-  - "**/Makefile"
+globs: "**/*.md, **/go.mod, **/Makefile"
 alwaysApply: false
 ---
 

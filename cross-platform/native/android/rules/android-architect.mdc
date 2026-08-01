@@ -1,11 +1,6 @@
 ---
 description: Android 原生架构规则。涉及 MVVM、Compose、导航、DI 等架构选型时触发。
-globs:
-  - "**/build.gradle.kts"
-  - "**/libs.versions.toml"
-  - "**/di/**"
-  - "**/App.kt"
-  - "**/MainActivity.kt"
+globs: "**/build.gradle.kts, **/libs.versions.toml, **/di/**, **/App.kt, **/MainActivity.kt"
 alwaysApply: false
 ---
 

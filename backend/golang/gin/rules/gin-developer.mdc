@@ -1,10 +1,7 @@
 ---
 description: Gin 生态开发约束。编写 Go 代码时始终生效。
-globs:
-  - "**/*.go"
-  - "**/go.mod"
-  - "**/Makefile"
-alwaysApply: true
+globs: "**/*.go, **/go.mod, **/Makefile"
+alwaysApply: false
 ---
 
 # Gin 开发规则

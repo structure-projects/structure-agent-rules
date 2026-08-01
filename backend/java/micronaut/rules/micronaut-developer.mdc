@@ -1,7 +1,7 @@
 ---
 description: Micronaut 开发约束
-globs: **/*.java,**/build.gradle*,**/build.gradle.kts
-alwaysApply: true
+globs: "**/*.java, **/build.gradle*, **/build.gradle.kts"
+alwaysApply: false
 ---
 
 # Micronaut 开发约束

@@ -1,6 +1,5 @@
 ---
 description: 通用命名规范 + Java 注释规范 - 适用于所有项目
-globs: **/*
 alwaysApply: true
 ---
 

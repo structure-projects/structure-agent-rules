@@ -1,7 +1,7 @@
 ---
 description: Tauri 开发约束
 globs: "**/*.rs,**/tauri.conf.json,**/Cargo.toml,**/src-tauri/**/*,**/*.ts,**/*.tsx,**/*.vue,**/*.svelte"
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Tauri 开发约束

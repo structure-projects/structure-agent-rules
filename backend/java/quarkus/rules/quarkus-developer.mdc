@@ -1,7 +1,7 @@
 ---
 description: Quarkus 开发约束
-globs: **/*.java,**/*.kt,**/pom.xml,**/build.gradle*
-alwaysApply: true
+globs: "**/*.java, **/*.kt, **/pom.xml, **/build.gradle*"
+alwaysApply: false
 ---
 
 # Quarkus 开发约束

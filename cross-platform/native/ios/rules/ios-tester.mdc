@@ -1,9 +1,6 @@
 ---
 description: iOS 原生测试规则。编写测试代码时触发。
-globs:
-  - "**/*Tests/**"
-  - "**/*UITests/**"
-  - "**/*Test.swift"
+globs: "**/*Tests/**, **/*UITests/**, **/*Test.swift"
 alwaysApply: false
 ---
 

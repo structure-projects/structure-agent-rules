@@ -1,11 +1,7 @@
 ---
 description: iOS 原生开发约束。编写 Swift/SwiftUI 代码时始终生效。
-globs:
-  - "**/*.swift"
-  - "**/Package.swift"
-  - "**/*.xcodeproj/**"
-  - "**/*.xcconfig"
-alwaysApply: true
+globs: "**/*.swift, **/Package.swift, **/*.xcodeproj/**, **/*.xcconfig"
+alwaysApply: false
 ---
 
 # iOS 原生开发规则

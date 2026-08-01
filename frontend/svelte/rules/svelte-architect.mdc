@@ -1,10 +1,6 @@
 ---
 description: Svelte 前端架构规则。涉及选型、路由、状态管理、SvelteKit 时触发。
-globs:
-  - "**/svelte.config.js"
-  - "**/vite.config.ts"
-  - "**/+layout.svelte"
-  - "**/hooks.server.ts"
+globs: "**/svelte.config.js, **/vite.config.ts, **/+layout.svelte, **/hooks.server.ts"
 alwaysApply: false
 ---
 

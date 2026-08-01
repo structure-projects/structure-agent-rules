@@ -1,10 +1,6 @@
 ---
 description: UniApp 前端架构规则。涉及 pages.json、路由、平台适配、状态管理时触发。
-globs:
-  - "**/pages.json"
-  - "**/manifest.json"
-  - "**/App.vue"
-  - "**/main.ts"
+globs: "**/pages.json, **/manifest.json, **/App.vue, **/main.ts"
 alwaysApply: false
 ---
 

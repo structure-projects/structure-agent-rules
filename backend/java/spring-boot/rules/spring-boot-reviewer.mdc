@@ -1,7 +1,6 @@
 ---
 description: Spring Boot 评审约束。审查 PR / diff / 设计文档时生效。
-globs:
-  - "**/*.md"
+globs: "**/*.md"
 alwaysApply: false
 ---
 

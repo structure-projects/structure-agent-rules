@@ -1,10 +1,6 @@
 ---
 description: Svelte 前端测试规则。编写测试代码时触发。
-globs:
-  - "**/*.test.ts"
-  - "**/*.spec.ts"
-  - "**/tests/**"
-  - "**/vitest.config.ts"
+globs: "**/*.test.ts, **/*.spec.ts, **/tests/**, **/vitest.config.ts"
 alwaysApply: false
 ---
 

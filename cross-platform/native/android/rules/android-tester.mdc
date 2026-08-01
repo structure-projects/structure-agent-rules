@@ -1,9 +1,6 @@
 ---
 description: Android 原生测试规则。编写测试代码时触发。
-globs:
-  - "**/test/**"
-  - "**/androidTest/**"
-  - "**/*Test.kt"
+globs: "**/test/**, **/androidTest/**, **/*Test.kt"
 alwaysApply: false
 ---
 

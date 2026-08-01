@@ -1,8 +1,6 @@
 ---
 description: Vue 3 前端 CI/CD 规则。涉及 GitHub Actions 流水线配置时触发。
-globs:
-  - "**/.github/workflows/**"
-  - "**/Dockerfile"
+globs: "**/.github/workflows/**, **/Dockerfile"
 alwaysApply: false
 ---
 
